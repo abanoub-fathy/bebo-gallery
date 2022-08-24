@@ -1,0 +1,5 @@
+# ignore the tmp directory
+tmp
+
+# ignore the exe files
+*.exe
