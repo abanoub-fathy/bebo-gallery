@@ -22,12 +22,12 @@ func main() {
 
 	// parse the home template
 	var err error
-	if homeTemplate, err = template.ParseFiles("views/home.gohtml"); err != nil {
+	if homeTemplate, err = template.ParseFiles("views/home.gohtml", "views/layouts/footer.gohtml"); err != nil {
 		panic(err)
 	}
 
 	// parse the contact template
-	if contactTemplate, err = template.ParseFiles("views/contact.gohtml"); err != nil {
+	if contactTemplate, err = template.ParseFiles("views/contact.gohtml", "views/layouts/footer.gohtml"); err != nil {
 		panic(err)
 	}
 
