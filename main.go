@@ -8,19 +8,27 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// home template
-var homeTemplate *template.Template
+// templates global vars
+var (
+	homeTemplate    *template.Template
+	contactTemplate *template.Template
+)
 
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", Home)
+	r.HandleFunc("/contact", Contact)
 	r.NotFoundHandler = http.HandlerFunc(NotFound)
 
 	// parse the home template
-	if t, err := template.ParseFiles("views/home.gohtml"); err != nil {
+	var err error
+	if homeTemplate, err = template.ParseFiles("views/home.gohtml"); err != nil {
 		panic(err)
-	} else {
-		homeTemplate = t
+	}
+
+	// parse the contact template
+	if contactTemplate, err = template.ParseFiles("views/contact.gohtml"); err != nil {
+		panic(err)
 	}
 
 	// start the app
@@ -34,6 +42,11 @@ func main() {
 func Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	homeTemplate.Execute(w, nil)
+}
+
+func Contact(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	contactTemplate.Execute(w, nil)
 }
 
 // NotFound is the handlerFunc for not found page
