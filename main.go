@@ -2,34 +2,28 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 
+	"github.com/abanoub-fathy/bebo-gallery/views"
 	"github.com/gorilla/mux"
 )
 
 // templates global vars
 var (
-	homeTemplate    *template.Template
-	contactTemplate *template.Template
+	homeView    *views.View
+	contactView *views.View
 )
 
 func main() {
+	// create template views
+	homeView = views.NewView("views/home.gohtml")
+	contactView = views.NewView("views/contact.gohtml")
+
+	// set router
 	r := mux.NewRouter()
 	r.HandleFunc("/", Home)
 	r.HandleFunc("/contact", Contact)
 	r.NotFoundHandler = http.HandlerFunc(NotFound)
-
-	// parse the home template
-	var err error
-	if homeTemplate, err = template.ParseFiles("views/home.gohtml", "views/layouts/footer.gohtml"); err != nil {
-		panic(err)
-	}
-
-	// parse the contact template
-	if contactTemplate, err = template.ParseFiles("views/contact.gohtml", "views/layouts/footer.gohtml"); err != nil {
-		panic(err)
-	}
 
 	// start the app
 	fmt.Println("🚀🚀 Server is working on http://localhost:3000")
@@ -41,12 +35,12 @@ func main() {
 // Home is the handlerFunc for the home page
 func Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	homeTemplate.Execute(w, nil)
+	homeView.Template.Execute(w, nil)
 }
 
 func Contact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	contactTemplate.Execute(w, nil)
+	contactView.Template.Execute(w, nil)
 }
 
 // NotFound is the handlerFunc for not found page
