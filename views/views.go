@@ -8,7 +8,8 @@ type View struct {
 	Template *template.Template
 }
 
-// create new view executable template parsed with layouts
+// NewView is a constructor function used to create new view
+// executable template parsed with layouts
 func NewView(files ...string) *View {
 	// apeend fileName wihh layout files
 	files = append(files, "views/layouts/footer.gohtml")
