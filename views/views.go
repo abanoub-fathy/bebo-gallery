@@ -7,11 +7,12 @@ import (
 
 type View struct {
 	Template *template.Template
+	Layout   string
 }
 
 // NewView is a constructor function used to create new view
 // executable template parsed with layouts
-func NewView(files ...string) *View {
+func NewView(layout string, files ...string) *View {
 	// get all files in the layout directory
 	layoutFiles, err := filepath.Glob("./views/layouts/*.gohtml")
 	if err != nil {
@@ -30,5 +31,6 @@ func NewView(files ...string) *View {
 	// return the view
 	return &View{
 		Template: t,
+		Layout:   layout,
 	}
 }

@@ -16,8 +16,8 @@ var (
 
 func main() {
 	// create template views
-	homeView = views.NewView("views/home.gohtml")
-	contactView = views.NewView("views/contact.gohtml")
+	homeView = views.NewView("base", "views/home.gohtml")
+	contactView = views.NewView("base", "views/contact.gohtml")
 
 	// set router
 	r := mux.NewRouter()
@@ -35,12 +35,12 @@ func main() {
 // Home is the handlerFunc for the home page
 func Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	homeView.Template.Execute(w, nil)
+	homeView.Template.ExecuteTemplate(w, homeView.Layout, nil)
 }
 
 func Contact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	contactView.Template.Execute(w, nil)
+	contactView.Template.ExecuteTemplate(w, contactView.Layout, nil)
 }
 
 // NotFound is the handlerFunc for not found page
