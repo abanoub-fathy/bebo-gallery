@@ -10,17 +10,16 @@ type View struct {
 	Layout   string
 }
 
+var (
+	LayoutDir         = "./views/layouts/"
+	TemplateExtension = ".gohtml"
+)
+
 // NewView is a constructor function used to create new view
 // executable template parsed with layouts
 func NewView(layout string, files ...string) *View {
-	// get all files in the layout directory
-	layoutFiles, err := filepath.Glob("./views/layouts/*.gohtml")
-	if err != nil {
-		panic(err)
-	}
-
 	// apeend fileName wihh layout files
-	files = append(files, layoutFiles...)
+	files = append(files, GetLayoutFiles()...)
 
 	// parse template file with layout files
 	t, err := template.ParseFiles(files...)
@@ -33,4 +32,15 @@ func NewView(layout string, files ...string) *View {
 		Template: t,
 		Layout:   layout,
 	}
+}
+
+// GetLayoutFiles is a func used to return all layout files
+func GetLayoutFiles() []string {
+	// get all files in the layout directory
+	layoutFiles, err := filepath.Glob(LayoutDir + "*" + TemplateExtension)
+	if err != nil {
+		panic(err)
+	}
+
+	return layoutFiles
 }
