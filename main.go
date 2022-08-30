@@ -27,24 +27,20 @@ func main() {
 
 	// start the app
 	fmt.Println("🚀🚀 Server is working on http://localhost:3000")
-	if err := http.ListenAndServe(":3000", r); err != nil {
-		panic(err)
-	}
+	must(http.ListenAndServe(":3000", r))
 }
 
 // Home is the handlerFunc for the home page
 func Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := homeView.Render(w, nil); err != nil {
-		panic(err)
-	}
+	must(homeView.Render(w, nil))
+
 }
 
+// Contact is the handlerFunc for the contact page
 func Contact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := contactView.Render(w, nil); err != nil {
-		panic(err)
-	}
+	must(contactView.Render(w, nil))
 }
 
 // NotFound is the handlerFunc for not found page
@@ -52,4 +48,11 @@ func NotFound(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusNotFound)
 	fmt.Fprint(w, "<h1>404 Not Found</h1>")
+}
+
+// must is used to panic an error if exist
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
