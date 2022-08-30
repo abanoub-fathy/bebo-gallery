@@ -2,6 +2,7 @@ package views
 
 import (
 	"html/template"
+	"net/http"
 	"path/filepath"
 )
 
@@ -43,4 +44,9 @@ func GetLayoutFiles() []string {
 	}
 
 	return layoutFiles
+}
+
+// Render is used to render a view based on the predefined layout
+func (view *View) Render(w http.ResponseWriter, data interface{}) error {
+	return view.Template.ExecuteTemplate(w, view.Layout, data)
 }

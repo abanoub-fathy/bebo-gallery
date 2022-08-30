@@ -35,16 +35,14 @@ func main() {
 // Home is the handlerFunc for the home page
 func Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	err := homeView.Template.ExecuteTemplate(w, homeView.Layout, nil)
-	if err != nil {
+	if err := homeView.Render(w, nil); err != nil {
 		panic(err)
 	}
 }
 
 func Contact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	err := contactView.Template.ExecuteTemplate(w, contactView.Layout, nil)
-	if err != nil {
+	if err := contactView.Render(w, nil); err != nil {
 		panic(err)
 	}
 }
