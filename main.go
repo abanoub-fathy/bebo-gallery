@@ -12,17 +12,20 @@ import (
 var (
 	homeView    *views.View
 	contactView *views.View
+	signupView  *views.View
 )
 
 func main() {
 	// create template views
 	homeView = views.NewView("base", "views/home.gohtml")
 	contactView = views.NewView("base", "views/contact.gohtml")
+	signupView = views.NewView("base", "views/signup.gohtml")
 
 	// set router
 	r := mux.NewRouter()
 	r.HandleFunc("/", Home)
 	r.HandleFunc("/contact", Contact)
+	r.HandleFunc("/signup", Signup)
 	r.NotFoundHandler = http.HandlerFunc(NotFound)
 
 	// start the app
@@ -48,6 +51,11 @@ func NotFound(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusNotFound)
 	fmt.Fprint(w, "<h1>404 Not Found</h1>")
+}
+
+func Signup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	must(signupView.Render(w, nil))
 }
 
 // must is used to panic an error if exist
