@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/abanoub-fathy/bebo-gallery/controllers"
 	"github.com/abanoub-fathy/bebo-gallery/views"
 	"github.com/gorilla/mux"
 )
@@ -12,20 +13,22 @@ import (
 var (
 	homeView    *views.View
 	contactView *views.View
-	signupView  *views.View
 )
 
 func main() {
 	// create template views
 	homeView = views.NewView("base", "views/home.gohtml")
 	contactView = views.NewView("base", "views/contact.gohtml")
-	signupView = views.NewView("base", "views/signup.gohtml")
+
+	// create new user controller
+	userController := controllers.NewUser()
 
 	// set router
 	r := mux.NewRouter()
 	r.HandleFunc("/", Home)
 	r.HandleFunc("/contact", Contact)
-	r.HandleFunc("/signup", Signup)
+	r.HandleFunc("/signup", userController.RenderUserSignUpForm).Methods("GET")
+	r.HandleFunc("/new", userController.CreateNewUser).Methods("POST")
 	r.NotFoundHandler = http.HandlerFunc(NotFound)
 
 	// start the app
@@ -37,7 +40,6 @@ func main() {
 func Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	must(homeView.Render(w, nil))
-
 }
 
 // Contact is the handlerFunc for the contact page
@@ -51,11 +53,6 @@ func NotFound(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusNotFound)
 	fmt.Fprint(w, "<h1>404 Not Found</h1>")
-}
-
-func Signup(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	must(signupView.Render(w, nil))
 }
 
 // must is used to panic an error if exist
