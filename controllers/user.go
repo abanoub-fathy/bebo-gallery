@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/abanoub-fathy/bebo-gallery/views"
+	"github.com/gorilla/schema"
 )
 
 type User struct {
@@ -26,9 +27,30 @@ func (u *User) RenderUserSignUpForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type SignUpForm struct {
+	Email    string `schema:"email,required"`
+	Password string `schema:"password,required"`
+}
+
 // CreateNewUser will create a new user
 func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
-	email := r.PostFormValue("email")
-	password := r.PostFormValue("password")
-	fmt.Fprintln(w, "email=", email, "password=", password)
+	// Parse the form
+	err := r.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+
+	// create schema decoder
+	var decoder = schema.NewDecoder()
+
+	// define signUpForm
+	var form SignUpForm
+
+	// decode the form
+	err = decoder.Decode(&form, r.PostForm)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintln(w, "email=", form.Email, "password=", form.Password)
 }
