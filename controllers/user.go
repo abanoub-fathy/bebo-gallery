@@ -28,5 +28,7 @@ func (u *User) RenderUserSignUpForm(w http.ResponseWriter, r *http.Request) {
 
 // CreateNewUser will create a new user
 func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Trying to create new user...")
+	email := r.PostFormValue("email")
+	password := r.PostFormValue("password")
+	fmt.Fprintln(w, "email=", email, "password=", password)
 }
