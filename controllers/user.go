@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/abanoub-fathy/bebo-gallery/views"
-	"github.com/gorilla/schema"
 )
 
 type User struct {
@@ -34,21 +34,11 @@ type SignUpForm struct {
 
 // CreateNewUser will create a new user
 func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
-	// Parse the form
-	err := r.ParseForm()
-	if err != nil {
-		panic(err)
-	}
-
-	// create schema decoder
-	var decoder = schema.NewDecoder()
-
 	// define signUpForm
 	var form SignUpForm
 
-	// decode the form
-	err = decoder.Decode(&form, r.PostForm)
-	if err != nil {
+	// Parse the form
+	if err := utils.ParseForm(r, &form); err != nil {
 		panic(err)
 	}
 
