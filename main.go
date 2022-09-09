@@ -5,28 +5,20 @@ import (
 	"net/http"
 
 	"github.com/abanoub-fathy/bebo-gallery/controllers"
-	"github.com/abanoub-fathy/bebo-gallery/views"
 	"github.com/gorilla/mux"
 )
 
-// templates global vars
-var (
-	homeView    *views.View
-	contactView *views.View
-)
-
 func main() {
-	// create template views
-	homeView = views.NewView("base", "views/home.gohtml")
-	contactView = views.NewView("base", "views/contact.gohtml")
-
 	// create new user controller
 	userController := controllers.NewUser()
 
+	// create StaticController
+	staticController := controllers.NewStatic()
+
 	// set router
 	r := mux.NewRouter()
-	r.HandleFunc("/", Home)
-	r.HandleFunc("/contact", Contact)
+	r.Handle("/", staticController.Home).Methods("GET")
+	r.Handle("/contact", staticController.Contact).Methods("GET")
 	r.HandleFunc("/signup", userController.RenderUserSignUpForm).Methods("GET")
 	r.HandleFunc("/new", userController.CreateNewUser).Methods("POST")
 	r.NotFoundHandler = http.HandlerFunc(NotFound)
@@ -34,18 +26,6 @@ func main() {
 	// start the app
 	fmt.Println("🚀🚀 Server is working on http://localhost:3000")
 	must(http.ListenAndServe(":3000", r))
-}
-
-// Home is the handlerFunc for the home page
-func Home(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	must(homeView.Render(w, nil))
-}
-
-// Contact is the handlerFunc for the contact page
-func Contact(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	must(contactView.Render(w, nil))
 }
 
 // NotFound is the handlerFunc for not found page

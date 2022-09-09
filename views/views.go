@@ -20,7 +20,7 @@ var (
 // executable template parsed with layouts
 func NewView(layout string, files ...string) *View {
 	// apeend fileName wihh layout files
-	files = append(files, GetLayoutFiles()...)
+	files = append(files, getLayoutFiles()...)
 
 	// parse template file with layout files
 	t, err := template.ParseFiles(files...)
@@ -36,7 +36,7 @@ func NewView(layout string, files ...string) *View {
 }
 
 // GetLayoutFiles is a func used to return all layout files
-func GetLayoutFiles() []string {
+func getLayoutFiles() []string {
 	// get all files in the layout directory
 	layoutFiles, err := filepath.Glob(LayoutDir + "*" + TemplateExtension)
 	if err != nil {
@@ -46,7 +46,16 @@ func GetLayoutFiles() []string {
 	return layoutFiles
 }
 
+// ServeHttp is used to implement the Handler type
+// now the *view type can be used as a Handler type
+func (view *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := view.Render(w, nil); err != nil {
+		panic(err)
+	}
+}
+
 // Render is used to render a view based on the predefined layout
 func (view *View) Render(w http.ResponseWriter, data interface{}) error {
+	w.Header().Set("Content-Type", "text/html")
 	return view.Template.ExecuteTemplate(w, view.Layout, data)
 }
