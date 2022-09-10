@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 )
 
+// View type is a struct contain the template of the view
+// and also the layout template
 type View struct {
 	Template *template.Template
 	Layout   string
