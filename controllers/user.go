@@ -16,7 +16,7 @@ type User struct {
 // as a receiver to call the handler functions
 func NewUser() *User {
 	return &User{
-		View: views.NewView("base", "views/user/new.gohtml"),
+		View: views.NewView("base", "user/new"),
 	}
 }
 

@@ -13,8 +13,8 @@ type Static struct {
 // all static pages hard coded inside it
 func NewStatic() *Static {
 	return &Static{
-		Home:     views.NewView("base", "views/static/home.gohtml"),
-		Contact:  views.NewView("base", "views/static/contact.gohtml"),
-		NotFound: views.NewView("base", "views/static/notFound.gohtml"),
+		Home:     views.NewView("base", "static/home"),
+		Contact:  views.NewView("base", "static/contact"),
+		NotFound: views.NewView("base", "static/notFound"),
 	}
 }

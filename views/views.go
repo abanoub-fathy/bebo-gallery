@@ -14,14 +14,21 @@ type View struct {
 }
 
 var (
-	LayoutDir         = "./views/layouts/"
+	LayoutDir         = "views/layouts/"
+	TemplateDir       = "views/"
 	TemplateExtension = ".gohtml"
 )
 
 // NewView is a constructor function used to create new view
 // executable template parsed with layouts
 func NewView(layout string, files ...string) *View {
-	// apeend fileName wihh layout files
+	// adding template path
+	addTemplatePath(files)
+
+	// adding template Extension
+	addTemplateExtension(files)
+
+	// apend fileName wihh layout files
 	files = append(files, getLayoutFiles()...)
 
 	// parse template file with layout files
@@ -60,4 +67,28 @@ func (view *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (view *View) Render(w http.ResponseWriter, data interface{}) error {
 	w.Header().Set("Content-Type", "text/html")
 	return view.Template.ExecuteTemplate(w, view.Layout, data)
+}
+
+// addTemplatePath takes in a slice of strings
+// representing file paths for templates, and it prepends
+// the TemplateDir directory to each string in the slice
+//
+// Eg the input {"home"} would result in the output
+// {"views/home"} if TemplateDir == "views/"
+func addTemplatePath(files []string) {
+	for i, file := range files {
+		files[i] = TemplateDir + file
+	}
+}
+
+// addTemplateExtension takes in a slice of strings
+// representing file paths for templates and it appends
+// the TemplateExt extension to each string in the slice
+//
+// Eg the input {"home"} would result in the output
+// {"home.gohtml"} if TemplateExt == ".gohtml"
+func addTemplateExtension(files []string) {
+	for i, file := range files {
+		files[i] = file + TemplateExtension
+	}
 }
