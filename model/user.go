@@ -18,7 +18,7 @@ type User struct {
 	Base
 	FirstName string `gorm:"not null"`
 	LastName  string `gorm:"not null"`
-	Email     string `gorm:"not null;unique_index"`
+	Email     string `gorm:"not null;unique;index"`
 }
 
 type UserService struct {
@@ -40,6 +40,11 @@ func NewUserService(DB_URI string) (*UserService, error) {
 	return &UserService{
 		db: db,
 	}, nil
+}
+
+// CreateUser is used to create new user in our database
+func (userService *UserService) CreateUser(user *User) error {
+	return userService.db.Create(&user).Error
 }
 
 func (userService *UserService) FindByID(ID string) (*User, error) {
