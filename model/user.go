@@ -6,7 +6,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 var (
@@ -29,9 +28,7 @@ type UserService struct {
 // interact with users
 func NewUserService(DB_URI string) (*UserService, error) {
 	// connect to DB
-	db, err := gorm.Open(postgres.Open(DB_URI), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
-	})
+	db, err := gorm.Open(postgres.Open(DB_URI), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
