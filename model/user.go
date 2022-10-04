@@ -44,6 +44,9 @@ func (userService *UserService) CreateUser(user *User) error {
 	return userService.db.Create(&user).Error
 }
 
+// FindByID is used to find user by its id
+// it will return the user from db and error if there is an error
+// if there is no user found it will return error of type ErrNotFound
 func (userService *UserService) FindByID(ID string) (*User, error) {
 	// define the user
 	user := new(User)
