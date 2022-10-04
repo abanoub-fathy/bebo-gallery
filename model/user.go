@@ -70,6 +70,25 @@ func (userService *UserService) FindByID(ID string) (*User, error) {
 	}
 }
 
+// FindByEmail is used to find user by its email address
+// it will return the user from db and error if there is an error
+// if there is no user found it will return error of type ErrNotFound
+func (userService *UserService) FindByEmail(email string) (*User, error) {
+	user := new(User)
+	err := userService.db.Where(&User{
+		Email: email,
+	}).First(&user).Error
+
+	switch err {
+	case nil:
+		return user, nil
+	case gorm.ErrRecordNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
 // Close used to close userService database connection
 func (userService *UserService) Close() error {
 	sqlDB, err := userService.db.DB()
