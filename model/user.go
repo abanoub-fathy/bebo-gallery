@@ -52,22 +52,17 @@ func (userService *UserService) FindByID(ID string) (*User, error) {
 	user := new(User)
 
 	// fetch user by id from db
-	err := userService.db.Where(User{
+	query := userService.db.Where(User{
 		Base: Base{
 			ID: uuid.FromStringOrNil(ID),
 		},
-	}).First(&user).Error
+	})
 
-	// switch the error type
-	switch err {
-	case nil:
-		return user, nil
-	case gorm.ErrRecordNotFound:
-		// if user is not found we will return nil for the user and Not Found error
-		return nil, ErrNotFound
-	default:
-		return nil, err
-	}
+	// get user record
+	err := getRecord(query, &user)
+
+	// return result
+	return user, err
 }
 
 // FindByEmail is used to find user by its email address
@@ -75,17 +70,23 @@ func (userService *UserService) FindByID(ID string) (*User, error) {
 // if there is no user found it will return error of type ErrNotFound
 func (userService *UserService) FindByEmail(email string) (*User, error) {
 	user := new(User)
-	err := userService.db.Where(&User{
+	query := userService.db.Where(&User{
 		Email: email,
-	}).First(&user).Error
+	})
+	err := getRecord(query, user)
+	return user, err
+}
 
-	switch err {
+func getRecord(query *gorm.DB, object interface{}) error {
+	switch err := query.First(object).Error; err {
 	case nil:
-		return user, nil
+		return nil
 	case gorm.ErrRecordNotFound:
-		return nil, ErrNotFound
+		object = nil
+		return ErrNotFound
 	default:
-		return nil, err
+		object = nil
+		return err
 	}
 }
 
