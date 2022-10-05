@@ -90,6 +90,16 @@ func getRecord(query *gorm.DB, object interface{}) error {
 	}
 }
 
+func (userService *UserService) DeleteUserByID(userID string) error {
+	err := userService.db.Where(&User{
+		Base: Base{
+			ID: uuid.FromStringOrNil(userID),
+		},
+	}).Delete(&User{}).Error
+
+	return err
+}
+
 // Close used to close userService database connection
 func (userService *UserService) Close() error {
 	sqlDB, err := userService.db.DB()
