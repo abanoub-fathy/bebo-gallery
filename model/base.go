@@ -17,7 +17,7 @@ type Base struct {
 
 // BeforeSave is used to assign new UUID to the id column
 // of the Base type
-func (b *Base) BeforeSave(db *gorm.DB) (err error) {
+func (b *Base) BeforeCreate(db *gorm.DB) (err error) {
 	uuid := uuid.NewV4()
 	db.Statement.SetColumn("ID", uuid)
 	return
