@@ -77,27 +77,55 @@ func (userService *UserService) FindByEmail(email string) (*User, error) {
 	return user, err
 }
 
-func getRecord(query *gorm.DB, object interface{}) error {
-	switch err := query.First(object).Error; err {
+func getRecord(query *gorm.DB, destination interface{}) error {
+	switch err := query.First(destination).Error; err {
 	case nil:
 		return nil
 	case gorm.ErrRecordNotFound:
-		object = nil
+		destination = nil
 		return ErrNotFound
 	default:
-		object = nil
+		destination = nil
 		return err
 	}
 }
 
-func (userService *UserService) DeleteUserByID(userID string) error {
-	err := userService.db.Where(&User{
-		Base: Base{
-			ID: uuid.FromStringOrNil(userID),
-		},
-	}).Delete(&User{}).Error
+// FindAndDeleteByID is used to delete user by its id
+//
+// it will first find the user and then delete it
+//
+// if the user is not found it will return ErrNotFound
+//
+// it returns the deleted user and the error if existed
+func (userService *UserService) FindAndDeleteByID(userID string) (*User, error) {
+	user, err := userService.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	err = userService.db.Delete(&user).Error
+	if err != nil {
+		return nil, err
+	}
 
-	return err
+	return user, nil
+}
+
+// FindAndUpdateByID is used to update user by its id
+// it will return the error if there is something wrong while updating user
+//
+// if the user is updated correctly it will return the updated user and nil error
+//
+// if there is no user found it will return error of type ErrNotFound
+func (userService *UserService) FindAndUpdateByID(userID string, updates map[string]interface{}) (*User, error) {
+	user, err := userService.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	err = userService.db.Model(&user).Updates(updates).Error
+	if err != nil {
+		return nil, err
+	}
+	return user, err
 }
 
 // Close used to close userService database connection
