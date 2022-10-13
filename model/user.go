@@ -140,13 +140,17 @@ func (userService *UserService) Close() error {
 	return nil
 }
 
+// AutoMigrate is used to auto migrate user table into the database
+func (userService *UserService) AutoMigrate() error {
+	return userService.db.AutoMigrate(&User{})
+}
+
 // ResetUserDB is used to drop user table and create new one
 func (userService *UserService) ResetUserDB() error {
 	if err := userService.db.Migrator().DropTable(&User{}); err != nil {
 		return err
 	}
-	if err := userService.db.AutoMigrate(&User{}); err != nil {
-		return err
-	}
-	return nil
+
+	// auto migrate user
+	return userService.AutoMigrate()
 }
