@@ -5,12 +5,25 @@ import (
 	"net/http"
 
 	"github.com/abanoub-fathy/bebo-gallery/controllers"
+	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/gorilla/mux"
 )
 
 func main() {
+	// Database URI
+	const DB_URI = "postgresql://postgres:popTop123@localhost:5432/bebo-gallery?sslmode=disable"
+
+	// create new UserService
+	userService, err := model.NewUserService(DB_URI)
+	if err != nil {
+		panic(err)
+	}
+	defer userService.Close()
+	// must(userService.ResetUserDB())
+	must(userService.AutoMigrate())
+
 	// create new user controller
-	userController := controllers.NewUser()
+	userController := controllers.NewUser(userService)
 
 	// create StaticController
 	staticController := controllers.NewStatic()

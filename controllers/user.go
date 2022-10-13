@@ -4,19 +4,22 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/abanoub-fathy/bebo-gallery/views"
 )
 
 type User struct {
-	View *views.View
+	View        *views.View
+	UserService *model.UserService
 }
 
 // NewUser return a pointer to User type which can be used
 // as a receiver to call the handler functions
-func NewUser() *User {
+func NewUser(userService *model.UserService) *User {
 	return &User{
-		View: views.NewView("base", "user/new"),
+		View:        views.NewView("base", "user/new"),
+		UserService: userService,
 	}
 }
 
@@ -28,8 +31,10 @@ func (u *User) RenderUserSignUpForm(w http.ResponseWriter, r *http.Request) {
 }
 
 type SignUpForm struct {
-	Email    string `schema:"email,required"`
-	Password string `schema:"password,required"`
+	FirstName string `schema:"firstName,required"`
+	LastName  string `schema:"lastName,required"`
+	Email     string `schema:"email,required"`
+	Password  string `schema:"password,required"`
 }
 
 // CreateNewUser will create a new user
@@ -42,5 +47,17 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fmt.Fprintln(w, "email=", form.Email, "password=", form.Password)
+	// create a new user
+	user := &model.User{
+		FirstName: form.FirstName,
+		LastName:  form.LastName,
+		Email:     form.Email,
+	}
+
+	if err := u.UserService.CreateUser(user); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintln(w, "id=", user.ID, "email=", user.Email, "firstName=", user.FirstName, "lastName=", user.LastName)
 }
