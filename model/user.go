@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	uuid "github.com/satori/go.uuid"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -15,9 +16,11 @@ var (
 
 type User struct {
 	Base
-	FirstName string `gorm:"not null"`
-	LastName  string `gorm:"not null"`
-	Email     string `gorm:"not null;unique;index"`
+	FirstName    string `gorm:"not null"`
+	LastName     string `gorm:"not null"`
+	Email        string `gorm:"not null;unique;index"`
+	Password     string `gorm:"-"`
+	PasswordHash string `gorm:"not null"`
 }
 
 type UserService struct {
@@ -41,6 +44,19 @@ func NewUserService(DB_URI string) (*UserService, error) {
 
 // CreateUser is used to create new user in our database
 func (userService *UserService) CreateUser(user *User) error {
+	if user.Password == "" {
+		return errors.New("user password is required")
+	}
+
+	// hash the user password
+	password, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user.PasswordHash = string(password)
+	user.Password = ""
+
+	// save user in the database
 	return userService.db.Create(&user).Error
 }
 
