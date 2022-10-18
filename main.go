@@ -32,8 +32,10 @@ func main() {
 	r := mux.NewRouter()
 	r.Handle("/", staticController.Home).Methods("GET")
 	r.Handle("/contact", staticController.Contact).Methods("GET")
-	r.HandleFunc("/signup", userController.RenderUserSignUpForm).Methods("GET")
+	r.Handle("/signup", userController.SignUpView).Methods("GET")
 	r.HandleFunc("/new", userController.CreateNewUser).Methods("POST")
+	r.Handle("/login", userController.LogInView).Methods("GET")
+	r.HandleFunc("/login", userController.Login).Methods("POST")
 	r.NotFoundHandler = staticController.NotFound
 
 	// start the app

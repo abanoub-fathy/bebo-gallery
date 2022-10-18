@@ -10,7 +10,8 @@ import (
 )
 
 type User struct {
-	View        *views.View
+	SignUpView  *views.View
+	LogInView   *views.View
 	UserService *model.UserService
 }
 
@@ -18,15 +19,9 @@ type User struct {
 // as a receiver to call the handler functions
 func NewUser(userService *model.UserService) *User {
 	return &User{
-		View:        views.NewView("base", "user/new"),
+		SignUpView:  views.NewView("base", "user/new"),
+		LogInView:   views.NewView("base", "user/login"),
 		UserService: userService,
-	}
-}
-
-// RenderUserSignUpForm
-func (u *User) RenderUserSignUpForm(w http.ResponseWriter, r *http.Request) {
-	if err := u.View.Render(w, nil); err != nil {
-		panic(err)
 	}
 }
 
@@ -37,7 +32,10 @@ type SignUpForm struct {
 	Password  string `schema:"password,required"`
 }
 
-// CreateNewUser will create a new user
+// CreateNewUser is a handler func that will receive data from sigup Form
+// and create a new user
+//
+// and save it to the database
 func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	// define signUpForm
 	var form SignUpForm
@@ -61,4 +59,25 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintln(w, "id=", user.ID, "email=", user.Email, "firstName=", user.FirstName, "lastName=", user.LastName)
+}
+
+type LoginForm struct {
+	Email    string `schema:"email,required"`
+	Password string `schema:"password,required"`
+}
+
+// Login is a handler func that will receive data from login Form
+//
+// and log user in
+func (u *User) Login(w http.ResponseWriter, r *http.Request) {
+	// define loginForm
+	form := LoginForm{}
+
+	// Parse the form
+	if err := utils.ParseForm(r, &form); err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintln(w, form)
+
 }
