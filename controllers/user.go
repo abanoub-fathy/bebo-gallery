@@ -52,6 +52,7 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		FirstName: form.FirstName,
 		LastName:  form.LastName,
 		Email:     form.Email,
+		Password:  form.Password,
 	}
 
 	if err := u.UserService.CreateUser(user); err != nil {
