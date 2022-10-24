@@ -2,6 +2,8 @@ package model
 
 import (
 	"errors"
+	"net/mail"
+	"strings"
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -12,6 +14,12 @@ import (
 var (
 	// ErrNotFound is returned when the resource can not be found from DB
 	ErrNotFound = errors.New("model: resource not found")
+
+	// ErrNotValidEmail is returned when the email address is invalid email
+	ErrNotValidEmail = errors.New("model: email address not valid")
+
+	// ErrPasswordNotCorrect is returned when the password is wrong for user
+	ErrPasswordNotCorrect = errors.New("model: password is incorrect")
 )
 
 type User struct {
@@ -142,6 +150,37 @@ func (userService *UserService) FindAndUpdateByID(userID string, updates map[str
 		return nil, err
 	}
 	return user, err
+}
+
+func (userService *UserService) AuthenticateUser(email, password string) (*User, error) {
+	// trim and lowerspace email
+	email = strings.ToLower(strings.TrimSpace(email))
+
+	// check if the email is valid
+	_, err := mail.ParseAddress(email)
+	if err != nil {
+		return nil, ErrNotValidEmail
+	}
+
+	// find user by email
+	user, err := userService.FindByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	// compare user password
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		switch err {
+		case bcrypt.ErrMismatchedHashAndPassword:
+			return nil, ErrPasswordNotCorrect
+		default:
+			return nil, err
+		}
+	}
+
+	// return the user and nil error
+	return user, nil
 }
 
 // Close used to close userService database connection
