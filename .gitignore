@@ -4,5 +4,8 @@ tmp
 # ignore the exe files
 *.exe
 
-#ignore exp directory
+# ignore exp directory
 exp
+
+# ignore .env file
+.env

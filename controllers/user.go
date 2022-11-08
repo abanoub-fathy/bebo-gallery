@@ -58,7 +58,9 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintln(w, "id=", user.ID, "email=", user.Email, "firstName=", user.FirstName, "lastName=", user.LastName)
+	SetCookieToResponseWriter(w, user)
+	http.Redirect(w, r, "/cookie", http.StatusFound)
+	// fmt.Fprintln(w, "id=", user.ID, "email=", user.Email, "firstName=", user.FirstName, "lastName=", user.LastName)
 }
 
 type LoginForm struct {
@@ -91,8 +93,33 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		default:
 			fmt.Fprintln(w, err)
 		}
+		// return after printing error
+		return
 	}
 
-	fmt.Fprintln(w, user)
+	SetCookieToResponseWriter(w, user)
+	http.Redirect(w, r, "/cookie", http.StatusFound)
 
+	// fmt.Fprintln(w, user)
+}
+
+func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
+	emailCookie, err := r.Cookie("email")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintln(w, emailCookie)
+}
+
+// SetCookieToResponseWriter is used to set cookie for user in the response writer
+func SetCookieToResponseWriter(w http.ResponseWriter, user *model.User) {
+	// create cookie to store user email
+	cookie := &http.Cookie{
+		Name:  "email",
+		Value: user.Email,
+	}
+	// set cookie in the response writer header
+	http.SetCookie(w, cookie)
 }
