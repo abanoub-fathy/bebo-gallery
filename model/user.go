@@ -3,8 +3,11 @@ package model
 import (
 	"errors"
 	"net/mail"
+	"os"
 	"strings"
 
+	"github.com/abanoub-fathy/bebo-gallery/hash"
+	"github.com/abanoub-fathy/bebo-gallery/rand"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
@@ -24,15 +27,18 @@ var (
 
 type User struct {
 	Base
-	FirstName    string `gorm:"not null"`
-	LastName     string `gorm:"not null"`
-	Email        string `gorm:"not null;unique;index"`
-	Password     string `gorm:"-"`
-	PasswordHash string `gorm:"not null"`
+	FirstName        string `gorm:"not null"`
+	LastName         string `gorm:"not null"`
+	Email            string `gorm:"not null;unique;index"`
+	Password         string `gorm:"-"`
+	PasswordHash     string `gorm:"not null"`
+	RememberToken    string `gorm:"-"`
+	RemeberTokenHash string `gorm:"unique;index"`
 }
 
 type UserService struct {
-	db *gorm.DB
+	db     *gorm.DB
+	hasher *hash.Hasher
 }
 
 // NewUserService creates a new userService to
@@ -46,7 +52,8 @@ func NewUserService(DB_URI string) (*UserService, error) {
 
 	// return userService
 	return &UserService{
-		db: db,
+		db:     db,
+		hasher: hash.NewHasher(os.Getenv("HASH_SECRET_KEY")),
 	}, nil
 }
 
@@ -63,6 +70,16 @@ func (userService *UserService) CreateUser(user *User) error {
 	}
 	user.PasswordHash = string(password)
 	user.Password = ""
+
+	// generate token and set it to the user
+	randToken, err := rand.GenerateRememberToken()
+	if err != nil {
+		return err
+	}
+	user.RememberToken = randToken
+
+	// hash token and set it to user object
+	user.RemeberTokenHash = userService.hasher.HashByHMAC(randToken)
 
 	// save user in the database
 	return userService.db.Create(&user).Error
@@ -152,6 +169,9 @@ func (userService *UserService) FindAndUpdateByID(userID string, updates map[str
 	return user, err
 }
 
+// AuthenticateUser is used to return user by email and password
+//
+// if the user is found the method will return the user object and nil error
 func (userService *UserService) AuthenticateUser(email, password string) (*User, error) {
 	// trim and lowerspace email
 	email = strings.ToLower(strings.TrimSpace(email))
@@ -181,6 +201,24 @@ func (userService *UserService) AuthenticateUser(email, password string) (*User,
 
 	// return the user and nil error
 	return user, nil
+}
+
+// FindUserByRememberToken is used to find user by remember token
+func (userService *UserService) FindUserByRememberToken(token string) (*User, error) {
+	// define user
+	user := new(User)
+
+	// hash the token
+	hashedToken := userService.hasher.HashByHMAC(token)
+
+	// make query
+	query := userService.db.Where(&User{
+		RemeberTokenHash: hashedToken,
+	})
+	// get the user
+	err := getRecord(query, user)
+	// return user
+	return user, err
 }
 
 // Close used to close userService database connection
