@@ -58,6 +58,9 @@ func NewUserService(DB_URI string) (*UserService, error) {
 }
 
 // CreateUser is used to create new user in our database
+//
+// the method also will generate token to the new user and
+// save it to the database
 func (userService *UserService) CreateUser(user *User) error {
 	if user.Password == "" {
 		return errors.New("user password is required")
@@ -71,18 +74,35 @@ func (userService *UserService) CreateUser(user *User) error {
 	user.PasswordHash = string(password)
 	user.Password = ""
 
-	// generate token and set it to the user
-	randToken, err := rand.GenerateRememberToken()
-	if err != nil {
-		return err
-	}
-	user.RememberToken = randToken
-
-	// hash token and set it to user object
-	user.RemeberTokenHash = userService.hasher.HashByHMAC(randToken)
+	// set new remember token
+	userService.SetNewRemeberToken(user)
 
 	// save user in the database
 	return userService.db.Create(&user).Error
+}
+
+// SetNewRemeberToken is used to generate and set new remember token
+// for the given user in the argument
+//
+// the method will not save the hash of the token to the database
+//
+// if there is no error the method will return nil error
+func (UserService *UserService) SetNewRemeberToken(user *User) error {
+	// generate new random remember token
+	token, err := rand.GenerateRememberToken()
+	if err != nil {
+		return err
+	}
+
+	// hash the token
+	hashedToken := UserService.hasher.HashByHMAC(token)
+
+	// set user token
+	user.RememberToken = token
+	user.RemeberTokenHash = hashedToken
+
+	// return no error
+	return nil
 }
 
 // FindByID is used to find user by its id
@@ -167,6 +187,11 @@ func (userService *UserService) FindAndUpdateByID(userID string, updates map[str
 		return nil, err
 	}
 	return user, err
+}
+
+// Save is used to update existing user
+func (userService *UserService) Save(user *User) error {
+	return userService.db.Save(&user).Error
 }
 
 // AuthenticateUser is used to return user by email and password

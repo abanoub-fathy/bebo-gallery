@@ -57,8 +57,7 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	SetCookieToResponseWriter(w, user)
+	setRemeberTokenToCookie(w, user)
 	http.Redirect(w, r, "/cookie", http.StatusFound)
 	// fmt.Fprintln(w, "id=", user.ID, "email=", user.Email, "firstName=", user.FirstName, "lastName=", user.LastName)
 }
@@ -97,28 +96,41 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	SetCookieToResponseWriter(w, user)
+	// set remember token to user
+	u.UserService.SetNewRemeberToken(user)
+
+	// save changes
+	u.UserService.Save(user)
+
+	// set remeber token in the cookie
+	setRemeberTokenToCookie(w, user)
 	http.Redirect(w, r, "/cookie", http.StatusFound)
 
 	// fmt.Fprintln(w, user)
 }
 
 func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
-	emailCookie, err := r.Cookie("email")
+	token, err := r.Cookie("token")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Fprintln(w, emailCookie)
+	user, err := u.UserService.FindUserByRememberToken(token.Value)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", *user)
 }
 
-// SetCookieToResponseWriter is used to set cookie for user in the response writer
-func SetCookieToResponseWriter(w http.ResponseWriter, user *model.User) {
+// setRemeberTokenToCookie is used to set cookie for user in the response writer
+func setRemeberTokenToCookie(w http.ResponseWriter, user *model.User) {
 	// create cookie to store user email
 	cookie := &http.Cookie{
-		Name:  "email",
-		Value: user.Email,
+		Name:  "token",
+		Value: user.RememberToken,
 	}
 	// set cookie in the response writer header
 	http.SetCookie(w, cookie)
