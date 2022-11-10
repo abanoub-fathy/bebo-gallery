@@ -129,8 +129,9 @@ func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
 func setRemeberTokenToCookie(w http.ResponseWriter, user *model.User) {
 	// create cookie to store user email
 	cookie := &http.Cookie{
-		Name:  "token",
-		Value: user.RememberToken,
+		Name:     "token",
+		Value:    user.RememberToken,
+		HttpOnly: true,
 	}
 	// set cookie in the response writer header
 	http.SetCookie(w, cookie)
