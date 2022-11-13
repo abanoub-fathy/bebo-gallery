@@ -112,16 +112,13 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("token")
 	if err != nil {
-		handler := http.RedirectHandler("/login", http.StatusMovedPermanently)
-		handler.ServeHTTP(w, r)
+		RedirectToLoginPage(w, r)
 		return
 	}
 
 	user, err := u.UserService.FindUserByRememberToken(token.Value)
 	if err != nil {
-		fmt.Println(err)
-		handler := http.RedirectHandler("/login", http.StatusMovedPermanently)
-		handler.ServeHTTP(w, r)
+		RedirectToLoginPage(w, r)
 		return
 	}
 
@@ -130,7 +127,7 @@ func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
 
 // setRemeberTokenToCookie is used to set cookie for user in the response writer
 func setRemeberTokenToCookie(w http.ResponseWriter, user *model.User) {
-	// create cookie to store user email
+	// create cookie to store user token
 	cookie := &http.Cookie{
 		Name:     "token",
 		Value:    user.RememberToken,
@@ -138,4 +135,9 @@ func setRemeberTokenToCookie(w http.ResponseWriter, user *model.User) {
 	}
 	// set cookie in the response writer header
 	http.SetCookie(w, cookie)
+}
+
+func RedirectToLoginPage(w http.ResponseWriter, r *http.Request) {
+	handler := http.RedirectHandler("/login", http.StatusMovedPermanently)
+	handler.ServeHTTP(w, r)
 }
