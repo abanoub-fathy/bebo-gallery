@@ -112,13 +112,16 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("token")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handler := http.RedirectHandler("/login", http.StatusMovedPermanently)
+		handler.ServeHTTP(w, r)
 		return
 	}
 
 	user, err := u.UserService.FindUserByRememberToken(token.Value)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println(err)
+		handler := http.RedirectHandler("/login", http.StatusMovedPermanently)
+		handler.ServeHTTP(w, r)
 		return
 	}
 
