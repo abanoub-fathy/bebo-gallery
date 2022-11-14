@@ -9,3 +9,6 @@ exp
 
 # ignore .env file
 .env
+
+# ignore shell script file
+dev.sh
