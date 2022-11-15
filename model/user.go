@@ -65,9 +65,9 @@ type userGorm struct {
 	hasher *hash.Hasher
 }
 
-// NewUserService creates a new userService to
+// newUserService creates a new userService to
 // interact with users
-func NewUserGorm(DB_URI string) (*userGorm, error) {
+func newUserGorm(DB_URI string) (*userGorm, error) {
 	// connect to DB
 	db, err := gorm.Open(postgres.Open(DB_URI), &gorm.Config{})
 	if err != nil {
@@ -102,7 +102,7 @@ type UserService struct {
 // interact with users
 func NewUserService(DB_URI string) (*UserService, error) {
 	// create new userGorm
-	userGorm, err := NewUserGorm(DB_URI)
+	userGorm, err := newUserGorm(DB_URI)
 	if err != nil {
 		return nil, err
 	}
