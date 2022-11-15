@@ -138,6 +138,5 @@ func setRemeberTokenToCookie(w http.ResponseWriter, user *model.User) {
 }
 
 func RedirectToLoginPage(w http.ResponseWriter, r *http.Request) {
-	handler := http.RedirectHandler("/login", http.StatusMovedPermanently)
-	handler.ServeHTTP(w, r)
+	http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 }
