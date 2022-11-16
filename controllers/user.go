@@ -12,12 +12,12 @@ import (
 type User struct {
 	SignUpView  *views.View
 	LogInView   *views.View
-	UserService *model.UserService
+	UserService model.UserService
 }
 
 // NewUser return a pointer to User type which can be used
 // as a receiver to call the handler functions
-func NewUser(userService *model.UserService) *User {
+func NewUser(userService model.UserService) *User {
 	return &User{
 		SignUpView:  views.NewView("base", "user/new"),
 		LogInView:   views.NewView("base", "user/login"),

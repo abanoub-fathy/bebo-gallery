@@ -94,13 +94,27 @@ type User struct {
 	RemeberTokenHash string `gorm:"unique;index"`
 }
 
-type UserService struct {
+// UserService is an interface that contains
+// smethods to interact with user model
+type UserService interface {
+	// AuthenticateUser is used to check the user email vs password
+	// if it is correct you will get the user and nil error
+	// otherwise you will get an error
+	//
+	// error can be ErrNotValidEmail, ErrNotFound, ErrPasswordNotCorrect
+	// or other generic error during authenticate user
+	AuthenticateUser(email, password string) (*User, error)
+
+	UserDB
+}
+
+type userService struct {
 	UserDB
 }
 
 // NewUserService creates a new userService to
 // interact with users
-func NewUserService(DB_URI string) (*UserService, error) {
+func NewUserService(DB_URI string) (UserService, error) {
 	// create new userGorm
 	userGorm, err := newUserGorm(DB_URI)
 	if err != nil {
@@ -108,7 +122,7 @@ func NewUserService(DB_URI string) (*UserService, error) {
 	}
 
 	// set the userGorm to UserDB in the UserService
-	userService := &UserService{
+	userService := &userService{
 		UserDB: userGorm,
 	}
 
@@ -256,7 +270,7 @@ func (ug *userGorm) Save(user *User) error {
 // AuthenticateUser is used to return user by email and password
 //
 // if the user is found the method will return the user object and nil error
-func (userService *UserService) AuthenticateUser(email, password string) (*User, error) {
+func (userService *userService) AuthenticateUser(email, password string) (*User, error) {
 	// trim and lowerspace email
 	email = strings.ToLower(strings.TrimSpace(email))
 

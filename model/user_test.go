@@ -9,7 +9,7 @@ import (
 
 type UserServiceSuite struct {
 	suite.Suite
-	*model.UserService
+	model.UserService
 }
 
 func (s *UserServiceSuite) SetupSuite() {
