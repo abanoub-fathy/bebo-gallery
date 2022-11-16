@@ -25,6 +25,19 @@ var (
 	ErrPasswordNotCorrect = errors.New("model: password is incorrect")
 )
 
+// User is a tyype represent our user model
+// in the database it is used for user accounts.
+type User struct {
+	Base
+	FirstName        string `gorm:"not null"`
+	LastName         string `gorm:"not null"`
+	Email            string `gorm:"not null;unique;index"`
+	Password         string `gorm:"-"`
+	PasswordHash     string `gorm:"not null"`
+	RememberToken    string `gorm:"-"`
+	RemeberTokenHash string `gorm:"unique;index"`
+}
+
 // UserDB is used to interact with the users database.
 //
 // For pretty much all single user queries:
@@ -83,17 +96,6 @@ func newUserGorm(DB_URI string) (*userGorm, error) {
 
 var _ UserDB = &userGorm{}
 
-type User struct {
-	Base
-	FirstName        string `gorm:"not null"`
-	LastName         string `gorm:"not null"`
-	Email            string `gorm:"not null;unique;index"`
-	Password         string `gorm:"-"`
-	PasswordHash     string `gorm:"not null"`
-	RememberToken    string `gorm:"-"`
-	RemeberTokenHash string `gorm:"unique;index"`
-}
-
 // UserService is an interface that contains
 // smethods to interact with user model
 type UserService interface {
@@ -108,9 +110,13 @@ type UserService interface {
 	UserDB
 }
 
+// userService struct is an implementation for UserService
+// interface type.
 type userService struct {
 	UserDB
 }
+
+var _ UserService = &userService{}
 
 // NewUserService creates a new userService to
 // interact with users
@@ -128,6 +134,40 @@ func NewUserService(DB_URI string) (UserService, error) {
 
 	// return
 	return userService, nil
+}
+
+// AuthenticateUser is used to return user by email and password
+//
+// if the user is found the method will return the user object and nil error
+func (userService *userService) AuthenticateUser(email, password string) (*User, error) {
+	// trim and lowerspace email
+	email = strings.ToLower(strings.TrimSpace(email))
+
+	// check if the email is valid
+	_, err := mail.ParseAddress(email)
+	if err != nil {
+		return nil, ErrNotValidEmail
+	}
+
+	// find user by email
+	user, err := userService.FindByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	// compare user password
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		switch err {
+		case bcrypt.ErrMismatchedHashAndPassword:
+			return nil, ErrPasswordNotCorrect
+		default:
+			return nil, err
+		}
+	}
+
+	// return the user and nil error
+	return user, nil
 }
 
 // CreateUser is used to create new user in our database
@@ -211,19 +251,6 @@ func (ug *userGorm) FindByEmail(email string) (*User, error) {
 	return user, err
 }
 
-func getRecord(query *gorm.DB, destination interface{}) error {
-	switch err := query.First(destination).Error; err {
-	case nil:
-		return nil
-	case gorm.ErrRecordNotFound:
-		destination = nil
-		return ErrNotFound
-	default:
-		destination = nil
-		return err
-	}
-}
-
 // FindAndDeleteByID is used to delete user by its id
 //
 // it will first find the user and then delete it
@@ -265,40 +292,6 @@ func (ug *userGorm) FindAndUpdateByID(userID string, updates map[string]interfac
 // Save is used to update existing user
 func (ug *userGorm) Save(user *User) error {
 	return ug.db.Save(&user).Error
-}
-
-// AuthenticateUser is used to return user by email and password
-//
-// if the user is found the method will return the user object and nil error
-func (userService *userService) AuthenticateUser(email, password string) (*User, error) {
-	// trim and lowerspace email
-	email = strings.ToLower(strings.TrimSpace(email))
-
-	// check if the email is valid
-	_, err := mail.ParseAddress(email)
-	if err != nil {
-		return nil, ErrNotValidEmail
-	}
-
-	// find user by email
-	user, err := userService.FindByEmail(email)
-	if err != nil {
-		return nil, err
-	}
-
-	// compare user password
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
-	if err != nil {
-		switch err {
-		case bcrypt.ErrMismatchedHashAndPassword:
-			return nil, ErrPasswordNotCorrect
-		default:
-			return nil, err
-		}
-	}
-
-	// return the user and nil error
-	return user, nil
 }
 
 // FindUserByRememberToken is used to find user by remember token
@@ -344,4 +337,17 @@ func (ug *userGorm) ResetUserDB() error {
 
 	// auto migrate user
 	return ug.AutoMigrate()
+}
+
+func getRecord(query *gorm.DB, destination interface{}) error {
+	switch err := query.First(destination).Error; err {
+	case nil:
+		return nil
+	case gorm.ErrRecordNotFound:
+		destination = nil
+		return ErrNotFound
+	default:
+		destination = nil
+		return err
+	}
 }
