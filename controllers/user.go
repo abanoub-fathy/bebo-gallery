@@ -97,10 +97,9 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// set remember token to user
-	u.UserService.SetNewRemeberToken(user)
-
-	// save changes
-	u.UserService.Save(user)
+	if err := u.UserService.SaveNewRemeberToken(user); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 
 	// set remeber token in the cookie
 	setRemeberTokenToCookie(w, user)

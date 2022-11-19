@@ -61,7 +61,7 @@ type UserDB interface {
 	FindAndUpdateByID(userID string, updates map[string]interface{}) (*User, error)
 	FindAndDeleteByID(userID string) (*User, error)
 	Save(user *User) error
-	SetNewRemeberToken(user *User) error
+	SaveNewRemeberToken(user *User) error
 
 	// Used to close a DB connection
 	Close() error
@@ -127,14 +127,96 @@ func NewUserService(DB_URI string) (UserService, error) {
 		return nil, err
 	}
 
+	// create userValidator
+	userValidator := &userValidator{
+		hasher: hash.NewHasher(os.Getenv("HASH_SECRET_KEY")),
+		UserDB: userGorm,
+	}
+
 	// set the userGorm to UserDB in the UserService
 	userService := &userService{
-		UserDB: userGorm,
+		UserDB: userValidator,
 	}
 
 	// return
 	return userService, nil
 }
+
+type userValidator struct {
+	UserDB
+	hasher *hash.Hasher
+}
+
+var _ UserDB = &userValidator{}
+
+// CreateUser is used to create new user in our database
+//
+// in this layer this method will validate email and password
+//
+// also the method will create a hashed password
+// then pass the user to the next UserDB layer
+func (uv *userValidator) CreateUser(user *User) error {
+	if user.Password == "" {
+		return errors.New("user password is required")
+	}
+
+	// hash the user password
+	password, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user.PasswordHash = string(password)
+	user.Password = ""
+
+	// set new remember token
+	if err := uv.GenerateAndSetNewTokenToUser(user); err != nil {
+		return err
+	}
+
+	// call the next DB layer
+	return uv.UserDB.CreateUser(user)
+}
+
+func (uv *userValidator) GenerateAndSetNewTokenToUser(user *User) error {
+	// generate new random remember token
+	token, err := rand.GenerateRememberToken()
+	if err != nil {
+		return err
+	}
+
+	// hash the token
+	hashedToken := uv.hasher.HashByHMAC(token)
+
+	// set user token
+	user.RememberToken = token
+	user.RemeberTokenHash = hashedToken
+	return nil
+}
+
+// SaveNewRemeberToken is used to generate and set new remember token
+// for the given user in the argument
+//
+// if there is no error the method will return nil error
+func (uv *userValidator) SaveNewRemeberToken(user *User) error {
+	// generate and set token
+	uv.GenerateAndSetNewTokenToUser(user)
+
+	// return to the next UserDB layer
+	return uv.UserDB.SaveNewRemeberToken(user)
+}
+
+// FindUserByRememberToken will hash the token and
+// pass the hashed token to the next UserDB layer
+func (uv *userValidator) FindUserByRememberToken(token string) (*User, error) {
+	// hash the token
+	hashedToken := uv.hasher.HashByHMAC(token)
+
+	// call the next UserDB layer
+	return uv.UserDB.FindUserByRememberToken(hashedToken)
+}
+
+
+
 
 // AuthenticateUser is used to return user by email and password
 //
@@ -170,53 +252,18 @@ func (userService *userService) AuthenticateUser(email, password string) (*User,
 	return user, nil
 }
 
-// CreateUser is used to create new user in our database
-//
-// the method also will generate token to the new user and
-// save it to the database
+// CreateUser is used to save user in the DB
 func (ug *userGorm) CreateUser(user *User) error {
-	if user.Password == "" {
-		return errors.New("user password is required")
-	}
-
-	// hash the user password
-	password, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	user.PasswordHash = string(password)
-	user.Password = ""
-
-	// set new remember token
-	ug.SetNewRemeberToken(user)
-
-	// save user in the database
 	return ug.db.Create(&user).Error
 }
 
-// SetNewRemeberToken is used to generate and set new remember token
-// for the given user in the argument
-//
-// the method will not save the hash of the token to the database
-//
-// if there is no error the method will return nil error
-func (ug *userGorm) SetNewRemeberToken(user *User) error {
-	// generate new random remember token
-	token, err := rand.GenerateRememberToken()
-	if err != nil {
-		return err
-	}
-
-	// hash the token
-	hashedToken := ug.hasher.HashByHMAC(token)
-
-	// set user token
-	user.RememberToken = token
-	user.RemeberTokenHash = hashedToken
-
-	// return no error
-	return nil
+// SaveNewRemeberToken is used to save new remeber token
+// to user
+func (ug *userGorm) SaveNewRemeberToken(user *User) error {
+	return ug.Save(user)
 }
+
+
 
 // FindByID is used to find user by its id
 // it will return the user from db and error if there is an error
@@ -295,12 +342,11 @@ func (ug *userGorm) Save(user *User) error {
 }
 
 // FindUserByRememberToken is used to find user by remember token
-func (ug *userGorm) FindUserByRememberToken(token string) (*User, error) {
+//
+// in this layer the method expect to receive the hashed token
+func (ug *userGorm) FindUserByRememberToken(hashedToken string) (*User, error) {
 	// define user
 	user := new(User)
-
-	// hash the token
-	hashedToken := ug.hasher.HashByHMAC(token)
 
 	// make query
 	query := ug.db.Where(&User{
@@ -308,6 +354,7 @@ func (ug *userGorm) FindUserByRememberToken(token string) (*User, error) {
 	})
 	// get the user
 	err := getRecord(query, user)
+
 	// return user
 	return user, err
 }
