@@ -149,6 +149,19 @@ type userValidator struct {
 
 var _ UserDB = &userValidator{}
 
+type userValidationFunc func(*User) error
+
+func runUserValidationFuncs(user *User, fns ...userValidationFunc) error {
+	for _, fn := range fns {
+		err := fn(user)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // CreateUser is used to create new user in our database
 //
 // in this layer this method will validate email and password
@@ -156,6 +169,21 @@ var _ UserDB = &userValidator{}
 // also the method will create a hashed password
 // then pass the user to the next UserDB layer
 func (uv *userValidator) CreateUser(user *User) error {
+	err := runUserValidationFuncs(user, uv.HashUserPassword)
+	if err != nil {
+		return err
+	}
+
+	// set new remember token
+	if err := uv.GenerateAndSetNewTokenToUser(user); err != nil {
+		return err
+	}
+
+	// call the next DB layer
+	return uv.UserDB.CreateUser(user)
+}
+
+func (uv *userValidator) HashUserPassword(user *User) error {
 	if user.Password == "" {
 		return errors.New("user password is required")
 	}
@@ -167,14 +195,7 @@ func (uv *userValidator) CreateUser(user *User) error {
 	}
 	user.PasswordHash = string(password)
 	user.Password = ""
-
-	// set new remember token
-	if err := uv.GenerateAndSetNewTokenToUser(user); err != nil {
-		return err
-	}
-
-	// call the next DB layer
-	return uv.UserDB.CreateUser(user)
+	return nil
 }
 
 func (uv *userValidator) GenerateAndSetNewTokenToUser(user *User) error {
@@ -215,8 +236,20 @@ func (uv *userValidator) FindUserByRememberToken(token string) (*User, error) {
 	return uv.UserDB.FindUserByRememberToken(hashedToken)
 }
 
+func (uv *userValidator) FindAndUpdateByID(userID string, updates map[string]interface{}) (*User, error) {
+	if _, passwordUpdate := updates["password"]; passwordUpdate {
+		user := &User{}
+		err := runUserValidationFuncs(user, uv.HashUserPassword)
+		if err != nil {
+			return nil, err
+		}
 
+		updates["PasswordHash"] = user.PasswordHash
+		delete(updates, "password")
+	}
 
+	return uv.UserDB.FindAndUpdateByID(userID, updates)
+}
 
 // AuthenticateUser is used to return user by email and password
 //
@@ -262,8 +295,6 @@ func (ug *userGorm) CreateUser(user *User) error {
 func (ug *userGorm) SaveNewRemeberToken(user *User) error {
 	return ug.Save(user)
 }
-
-
 
 // FindByID is used to find user by its id
 // it will return the user from db and error if there is an error
