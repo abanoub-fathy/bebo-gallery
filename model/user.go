@@ -215,7 +215,6 @@ func (uv *userValidator) HashUserRememberToken(user *User) error {
 	// hash the token
 	hashedToken := uv.hasher.HashByHMAC(user.RememberToken)
 	user.RemeberTokenHash = hashedToken
-	user.RememberToken = ""
 	return nil
 }
 
