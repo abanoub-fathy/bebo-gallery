@@ -169,13 +169,12 @@ func runUserValidationFuncs(user *User, fns ...userValidationFunc) error {
 // also the method will create a hashed password
 // then pass the user to the next UserDB layer
 func (uv *userValidator) CreateUser(user *User) error {
-	err := runUserValidationFuncs(user, uv.HashUserPassword)
-	if err != nil {
-		return err
-	}
+	err := runUserValidationFuncs(user,
+		uv.HashUserPassword,
+		uv.GenerateNewRemeberToken,
+		uv.HashUserRememberToken)
 
-	// set new remember token
-	if err := uv.GenerateAndSetNewTokenToUser(user); err != nil {
+	if err != nil {
 		return err
 	}
 
@@ -198,19 +197,25 @@ func (uv *userValidator) HashUserPassword(user *User) error {
 	return nil
 }
 
-func (uv *userValidator) GenerateAndSetNewTokenToUser(user *User) error {
+func (uv *userValidator) GenerateNewRemeberToken(user *User) error {
 	// generate new random remember token
 	token, err := rand.GenerateRememberToken()
 	if err != nil {
 		return err
 	}
 
-	// hash the token
-	hashedToken := uv.hasher.HashByHMAC(token)
-
-	// set user token
 	user.RememberToken = token
+	return nil
+}
+
+func (uv *userValidator) HashUserRememberToken(user *User) error {
+	if user.RememberToken == "" {
+		return errors.New("token not present to hash")
+	}
+	// hash the token
+	hashedToken := uv.hasher.HashByHMAC(user.RememberToken)
 	user.RemeberTokenHash = hashedToken
+	user.RememberToken = ""
 	return nil
 }
 
@@ -220,7 +225,9 @@ func (uv *userValidator) GenerateAndSetNewTokenToUser(user *User) error {
 // if there is no error the method will return nil error
 func (uv *userValidator) SaveNewRemeberToken(user *User) error {
 	// generate and set token
-	uv.GenerateAndSetNewTokenToUser(user)
+	runUserValidationFuncs(user,
+		uv.GenerateNewRemeberToken,
+		uv.HashUserRememberToken)
 
 	// return to the next UserDB layer
 	return uv.UserDB.SaveNewRemeberToken(user)
@@ -229,16 +236,19 @@ func (uv *userValidator) SaveNewRemeberToken(user *User) error {
 // FindUserByRememberToken will hash the token and
 // pass the hashed token to the next UserDB layer
 func (uv *userValidator) FindUserByRememberToken(token string) (*User, error) {
-	// hash the token
-	hashedToken := uv.hasher.HashByHMAC(token)
+	user := &User{RememberToken: token}
+	err := runUserValidationFuncs(user, uv.HashUserRememberToken)
+	if err != nil {
+		return nil, err
+	}
 
 	// call the next UserDB layer
-	return uv.UserDB.FindUserByRememberToken(hashedToken)
+	return uv.UserDB.FindUserByRememberToken(user.RemeberTokenHash)
 }
 
 func (uv *userValidator) FindAndUpdateByID(userID string, updates map[string]interface{}) (*User, error) {
+	user := &User{}
 	if _, passwordUpdate := updates["password"]; passwordUpdate {
-		user := &User{}
 		err := runUserValidationFuncs(user, uv.HashUserPassword)
 		if err != nil {
 			return nil, err
