@@ -170,8 +170,8 @@ func runUserValidationFuncs(user *User, fns ...userValidationFunc) error {
 // then pass the user to the next UserDB layer
 func (uv *userValidator) CreateUser(user *User) error {
 	err := runUserValidationFuncs(user,
-		uv.ValidateEmail,
 		uv.NormalizeEmail,
+		uv.ValidateEmail,
 		uv.HashUserPassword,
 		uv.GenerateNewRemeberToken,
 		uv.HashUserRememberToken)
@@ -250,7 +250,7 @@ func (uv *userValidator) FindUserByRememberToken(token string) (*User, error) {
 func (uv *userValidator) FindAndUpdateByID(userID string, updates map[string]interface{}) (*User, error) {
 	user := &User{}
 	if _, emailUpdate := updates["email"]; emailUpdate {
-		err := runUserValidationFuncs(user, uv.ValidateEmail, uv.NormalizeEmail)
+		err := runUserValidationFuncs(user, uv.NormalizeEmail, uv.ValidateEmail)
 		if err != nil {
 			return nil, err
 		}
@@ -292,7 +292,7 @@ func (uv *userValidator) NormalizeEmail(user *User) error {
 // to validate and normalize email address
 func (uv *userValidator) FindByEmail(email string) (*User, error) {
 	user := &User{Email: email}
-	err := runUserValidationFuncs(user, uv.ValidateEmail, uv.NormalizeEmail)
+	err := runUserValidationFuncs(user, uv.NormalizeEmail, uv.ValidateEmail)
 	if err != nil {
 		return nil, err
 	}
