@@ -170,6 +170,8 @@ func runUserValidationFuncs(user *User, fns ...userValidationFunc) error {
 // then pass the user to the next UserDB layer
 func (uv *userValidator) CreateUser(user *User) error {
 	err := runUserValidationFuncs(user,
+		uv.ValidateEmail,
+		uv.NormalizeEmail,
 		uv.HashUserPassword,
 		uv.GenerateNewRemeberToken,
 		uv.HashUserRememberToken)
@@ -247,6 +249,13 @@ func (uv *userValidator) FindUserByRememberToken(token string) (*User, error) {
 
 func (uv *userValidator) FindAndUpdateByID(userID string, updates map[string]interface{}) (*User, error) {
 	user := &User{}
+	if _, emailUpdate := updates["email"]; emailUpdate {
+		err := runUserValidationFuncs(user, uv.ValidateEmail, uv.NormalizeEmail)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if _, passwordUpdate := updates["password"]; passwordUpdate {
 		err := runUserValidationFuncs(user, uv.HashUserPassword)
 		if err != nil {
@@ -260,19 +269,40 @@ func (uv *userValidator) FindAndUpdateByID(userID string, updates map[string]int
 	return uv.UserDB.FindAndUpdateByID(userID, updates)
 }
 
+func (uv *userValidator) ValidateEmail(user *User) error {
+	// check if the email is valid
+	_, err := mail.ParseAddress(user.Email)
+	if err != nil {
+		return ErrNotValidEmail
+	}
+	return nil
+}
+
+// NormalizeEmail is used to trim the space in the email
+// address and also convert all chars to lowercase
+//
+// it is usually used after ValidateEmail method
+func (uv *userValidator) NormalizeEmail(user *User) error {
+	user.Email = strings.TrimSpace(user.Email)
+	user.Email = strings.ToLower(user.Email)
+	return nil
+}
+
+// FindByEmail validation method is used
+// to validate and normalize email address
+func (uv *userValidator) FindByEmail(email string) (*User, error) {
+	user := &User{Email: email}
+	err := runUserValidationFuncs(user, uv.ValidateEmail, uv.NormalizeEmail)
+	if err != nil {
+		return nil, err
+	}
+	return uv.UserDB.FindByEmail(user.Email)
+}
+
 // AuthenticateUser is used to return user by email and password
 //
 // if the user is found the method will return the user object and nil error
 func (userService *userService) AuthenticateUser(email, password string) (*User, error) {
-	// trim and lowerspace email
-	email = strings.ToLower(strings.TrimSpace(email))
-
-	// check if the email is valid
-	_, err := mail.ParseAddress(email)
-	if err != nil {
-		return nil, ErrNotValidEmail
-	}
-
 	// find user by email
 	user, err := userService.FindByEmail(email)
 	if err != nil {
