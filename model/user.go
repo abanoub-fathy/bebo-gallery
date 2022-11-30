@@ -2,8 +2,8 @@ package model
 
 import (
 	"errors"
-	"net/mail"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/abanoub-fathy/bebo-gallery/hash"
@@ -23,6 +23,9 @@ var (
 
 	// ErrPasswordNotCorrect is returned when the password is wrong for user
 	ErrPasswordNotCorrect = errors.New("model: password is incorrect")
+
+	// ErrEmailNotValidFormat is not correct is used to tell that the email address is not valid
+	ErrEmailNotValidFormat = errors.New("Email address is not valid")
 )
 
 // User is a tyype represent our user model
@@ -128,10 +131,7 @@ func NewUserService(DB_URI string) (UserService, error) {
 	}
 
 	// create userValidator
-	userValidator := &userValidator{
-		hasher: hash.NewHasher(os.Getenv("HASH_SECRET_KEY")),
-		UserDB: userGorm,
-	}
+	userValidator := newUserValidator(userGorm, hash.NewHasher(os.Getenv("HASH_SECRET_KEY")))
 
 	// set the userGorm to UserDB in the UserService
 	userService := &userService{
@@ -144,7 +144,16 @@ func NewUserService(DB_URI string) (UserService, error) {
 
 type userValidator struct {
 	UserDB
-	hasher *hash.Hasher
+	hasher     *hash.Hasher
+	emailRegex *regexp.Regexp
+}
+
+func newUserValidator(userDB UserDB, hasher *hash.Hasher) *userValidator {
+	return &userValidator{
+		UserDB:     userDB,
+		hasher:     hasher,
+		emailRegex: regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,16}$`),
+	}
 }
 
 var _ UserDB = &userValidator{}
@@ -269,11 +278,15 @@ func (uv *userValidator) FindAndUpdateByID(userID string, updates map[string]int
 	return uv.UserDB.FindAndUpdateByID(userID, updates)
 }
 
+// ValidateEmail validate that the email address is correct
+// first it is going to check if it is empty or not
+//
+// if the email is not valid because it is not in the
+// email format it is going to ruturn ErrEmailNotValidFormat
 func (uv *userValidator) ValidateEmail(user *User) error {
-	// check if the email is valid
-	_, err := mail.ParseAddress(user.Email)
-	if err != nil {
-		return ErrNotValidEmail
+	validEmail := uv.emailRegex.MatchString(user.Email)
+	if !validEmail {
+		return ErrEmailNotValidFormat
 	}
 	return nil
 }
@@ -281,7 +294,7 @@ func (uv *userValidator) ValidateEmail(user *User) error {
 // NormalizeEmail is used to trim the space in the email
 // address and also convert all chars to lowercase
 //
-// it is usually used after ValidateEmail method
+// it is usually used before ValidateEmail method
 func (uv *userValidator) NormalizeEmail(user *User) error {
 	user.Email = strings.TrimSpace(user.Email)
 	user.Email = strings.ToLower(user.Email)
