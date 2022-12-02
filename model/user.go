@@ -26,6 +26,9 @@ var (
 
 	// ErrEmailNotValidFormat is not correct is used to tell that the email address is not valid
 	ErrEmailNotValidFormat = errors.New("Email address is not valid")
+
+	// ErrEmailIsTaken
+	ErrEmailIsTaken = errors.New("email address is already taken")
 )
 
 // User is a tyype represent our user model
@@ -181,6 +184,7 @@ func (uv *userValidator) CreateUser(user *User) error {
 	err := runUserValidationFuncs(user,
 		uv.NormalizeEmail,
 		uv.ValidateEmail,
+		uv.EmailIsNotTaken,
 		uv.HashUserPassword,
 		uv.GenerateNewRemeberToken,
 		uv.HashUserRememberToken)
@@ -259,7 +263,7 @@ func (uv *userValidator) FindUserByRememberToken(token string) (*User, error) {
 func (uv *userValidator) FindAndUpdateByID(userID string, updates map[string]interface{}) (*User, error) {
 	user := &User{}
 	if _, emailUpdate := updates["email"]; emailUpdate {
-		err := runUserValidationFuncs(user, uv.NormalizeEmail, uv.ValidateEmail)
+		err := runUserValidationFuncs(user, uv.NormalizeEmail, uv.ValidateEmail, uv.EmailIsNotTaken)
 		if err != nil {
 			return nil, err
 		}
@@ -298,6 +302,32 @@ func (uv *userValidator) ValidateEmail(user *User) error {
 func (uv *userValidator) NormalizeEmail(user *User) error {
 	user.Email = strings.TrimSpace(user.Email)
 	user.Email = strings.ToLower(user.Email)
+	return nil
+}
+
+// EmailIsNotTaken is used to check if the email address
+// is not taken by other users
+func (uv *userValidator) EmailIsNotTaken(user *User) error {
+	// call FindByEmail
+	existingUser, err := uv.FindByEmail(user.Email)
+
+	// if the user not found
+	if err == ErrNotFound {
+		return nil
+	}
+
+	// return other errors
+	if err != nil {
+		return err
+	}
+
+	// if the user exists
+
+	// check if another user try to use existed email
+	if existingUser.ID.String() != user.ID.String() {
+		return ErrEmailIsTaken
+	}
+
 	return nil
 }
 
