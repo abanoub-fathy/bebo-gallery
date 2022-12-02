@@ -18,9 +18,6 @@ var (
 	// ErrNotFound is returned when the resource can not be found from DB
 	ErrNotFound = errors.New("model: resource not found")
 
-	// ErrNotValidEmail is returned when the email address is invalid email
-	ErrNotValidEmail = errors.New("model: email address not valid")
-
 	// ErrPasswordNotCorrect is returned when the password is wrong for user
 	ErrPasswordNotCorrect = errors.New("model: password is incorrect")
 
@@ -109,7 +106,7 @@ type UserService interface {
 	// if it is correct you will get the user and nil error
 	// otherwise you will get an error
 	//
-	// error can be ErrNotValidEmail, ErrNotFound, ErrPasswordNotCorrect
+	// error can be ErrEmailNotValidFormat, ErrNotFound, ErrPasswordNotCorrect
 	// or other generic error during authenticate user
 	AuthenticateUser(email, password string) (*User, error)
 

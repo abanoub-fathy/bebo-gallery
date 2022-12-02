@@ -83,7 +83,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	user, err := u.UserService.AuthenticateUser(form.Email, form.Password)
 	if err != nil {
 		switch err {
-		case model.ErrNotValidEmail:
+		case model.ErrEmailNotValidFormat:
 			fmt.Fprintln(w, "not valid email address")
 		case model.ErrNotFound:
 			fmt.Fprintln(w, "user email not found")
