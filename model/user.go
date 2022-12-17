@@ -22,10 +22,16 @@ var (
 	ErrPasswordNotCorrect = errors.New("model: password is incorrect")
 
 	// ErrEmailNotValidFormat is not correct is used to tell that the email address is not valid
-	ErrEmailNotValidFormat = errors.New("Email address is not valid")
+	ErrEmailNotValidFormat = errors.New("email address is not valid")
 
 	// ErrEmailIsTaken
 	ErrEmailIsTaken = errors.New("email address is already taken")
+
+	// ErrPasswordTooShort is returned on password is less than 8 chars
+	ErrPasswordTooShort = errors.New("password should be at least 8 chars")
+
+	//ErrPasswordRequired
+	ErrPasswordRequired = errors.New("password can not be empty")
 )
 
 // User is a tyype represent our user model
@@ -182,6 +188,8 @@ func (uv *userValidator) CreateUser(user *User) error {
 		uv.NormalizeEmail,
 		uv.ValidateEmail,
 		uv.EmailIsNotTaken,
+		uv.RequirePassword,
+		uv.ValidatePassword(8),
 		uv.HashUserPassword,
 		uv.GenerateNewRemeberToken,
 		uv.HashUserRememberToken)
@@ -192,6 +200,24 @@ func (uv *userValidator) CreateUser(user *User) error {
 
 	// call the next DB layer
 	return uv.UserDB.CreateUser(user)
+}
+
+// ValidatePassword is used to check for valid user password
+// if the password is less than minLength chars it will trow an error
+func (uv *userValidator) ValidatePassword(minLength uint) userValidationFunc {
+	return func(user *User) error {
+		if len(user.Password) < int(minLength) {
+			return ErrPasswordTooShort
+		}
+		return nil
+	}
+}
+
+func (uv *userValidator) RequirePassword(user *User) error {
+	if user.Password == "" {
+		return ErrPasswordRequired
+	}
+	return nil
 }
 
 func (uv *userValidator) HashUserPassword(user *User) error {
@@ -267,7 +293,7 @@ func (uv *userValidator) FindAndUpdateByID(userID string, updates map[string]int
 	}
 
 	if _, passwordUpdate := updates["password"]; passwordUpdate {
-		err := runUserValidationFuncs(user, uv.HashUserPassword)
+		err := runUserValidationFuncs(user, uv.ValidatePassword(8), uv.HashUserPassword)
 		if err != nil {
 			return nil, err
 		}
