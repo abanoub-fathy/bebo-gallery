@@ -42,7 +42,8 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the form
 	if err := utils.ParseForm(r, &form); err != nil {
-		panic(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	// create a new user
