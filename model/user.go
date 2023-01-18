@@ -32,6 +32,14 @@ var (
 
 	//ErrPasswordRequired
 	ErrPasswordRequired = errors.New("password can not be empty")
+
+	// ErrRememberRequired is returned when a create or update
+	// is attempted without a user remember token hash
+	ErrRememberRequired = errors.New("models: remember token is required")
+
+	// ErrRememberTooShort is returned when a remember token is
+	// not at least 32 bytes
+	ErrRememberTooShort = errors.New("models: remember token must be at least 32 bytes")
 )
 
 // User is a tyype represent our user model
