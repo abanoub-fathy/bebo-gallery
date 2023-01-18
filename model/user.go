@@ -35,7 +35,7 @@ var (
 
 	// ErrRememberRequired is returned when a create or update
 	// is attempted without a user remember token hash
-	ErrRememberRequired = errors.New("models: remember token is required")
+	ErrRememberTokenHashRequired = errors.New("models: remember token hash is required")
 
 	// ErrRememberTooShort is returned when a remember token is
 	// not at least 32 bytes
@@ -261,6 +261,24 @@ func (uv *userValidator) HashUserRememberToken(user *User) error {
 	// hash the token
 	hashedToken := uv.hasher.HashByHMAC(user.RememberToken)
 	user.RemeberTokenHash = hashedToken
+	return nil
+}
+
+func (uv *userValidator) CheckRemeberTokenLength(user *User) error {
+	n, err := rand.NBytes(user.RememberToken)
+	if err != nil {
+		return err
+	}
+	if n < 32 {
+		return ErrRememberTooShort
+	}
+	return nil
+}
+
+func (uv *userValidator) RequireRemeberTokenHash(user *User) error {
+	if user.RemeberTokenHash == "" {
+		return ErrRememberTokenHashRequired
+	}
 	return nil
 }
 
