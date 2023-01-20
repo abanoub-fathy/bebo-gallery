@@ -200,7 +200,10 @@ func (uv *userValidator) CreateUser(user *User) error {
 		uv.ValidatePassword(8),
 		uv.HashUserPassword,
 		uv.GenerateNewRemeberToken,
-		uv.HashUserRememberToken)
+		uv.CheckRemeberTokenLength,
+		uv.HashUserRememberToken,
+		uv.RequireRemeberTokenHash,
+	)
 
 	if err != nil {
 		return err
@@ -290,7 +293,10 @@ func (uv *userValidator) SaveNewRemeberToken(user *User) error {
 	// generate and set token
 	runUserValidationFuncs(user,
 		uv.GenerateNewRemeberToken,
-		uv.HashUserRememberToken)
+		uv.CheckRemeberTokenLength,
+		uv.HashUserRememberToken,
+		uv.RequireRemeberTokenHash,
+	)
 
 	// return to the next UserDB layer
 	return uv.UserDB.SaveNewRemeberToken(user)
