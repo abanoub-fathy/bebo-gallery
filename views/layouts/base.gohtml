@@ -9,11 +9,12 @@
     {{block "css" .}} {{end}}
   </head>
   <body>
-
     <!-- Navbar -->
     {{ template "navbar" . }}
     <!-- End Navbar -->
 
+      {{template "alert" .}}
+      
     <div class="container">
       <!-- Start Content -->
           {{template "content" .}}
