@@ -32,6 +32,31 @@ type SignUpForm struct {
 	Password  string `schema:"password,required"`
 }
 
+func (u *User) SignUpPage(w http.ResponseWriter, r *http.Request) {
+
+	type Alert struct {
+		Level   string
+		Message string
+	}
+
+	type Params struct {
+		Data  interface{}
+		Alert *Alert
+	}
+
+	alert := Alert{
+		Level:   "success",
+		Message: "Successfully rendered a dynamic alert!",
+	}
+
+	params := Params{
+		Data:  "sdsd",
+		Alert: &alert,
+	}
+
+	u.SignUpView.Render(w, params)
+}
+
 // CreateNewUser is a handler func that will receive data from sigup Form
 // and create a new user
 //
