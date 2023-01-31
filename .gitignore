@@ -12,3 +12,6 @@ exp
 
 # ignore shell script file
 dev.sh
+
+# ignore air config
+.air.toml
