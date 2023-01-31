@@ -33,25 +33,11 @@ type SignUpForm struct {
 }
 
 func (u *User) SignUpPage(w http.ResponseWriter, r *http.Request) {
-
-	type Alert struct {
-		Level   string
-		Message string
-	}
-
-	type Params struct {
-		Data  interface{}
-		Alert *Alert
-	}
-
-	alert := Alert{
-		Level:   "success",
-		Message: "Successfully rendered a dynamic alert!",
-	}
-
-	params := Params{
-		Data:  "sdsd",
-		Alert: &alert,
+	params := views.Params{
+		Alert: &views.Alert{
+			Level:   views.SuceessAlertLevel,
+			Message: "This is the success message",
+		},
 	}
 
 	u.SignUpView.Render(w, params)
