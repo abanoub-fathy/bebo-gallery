@@ -12,9 +12,10 @@
     <!-- Navbar -->
     {{ template "navbar" . }}
     <!-- End Navbar -->
+      {{if .Alert}}
+        {{template "alert" .Alert}}
+      {{end}}
 
-      {{template "alert" .}}
-      
     <div class="container">
       <!-- Start Content -->
           {{template "content" .}}
