@@ -8,10 +8,10 @@ type Alert struct {
 
 // Alert levels
 const (
-	SuceessAlertLevel = "success"
-	InfoAlertLeve     = "info"
-	WarningAlertLevel = "warning"
-	DangerAlertLevel  = "danger"
+	AlertLevelSuccess = "success"
+	AlertLevelInfo    = "info"
+	AlertLevelWarning = "warning"
+	AlertLevelError   = "danger"
 )
 
 // Params represents the params that we can pass to the template

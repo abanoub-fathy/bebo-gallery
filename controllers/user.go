@@ -35,7 +35,7 @@ type SignUpForm struct {
 func (u *User) SignUpPage(w http.ResponseWriter, r *http.Request) {
 	params := views.Params{
 		Alert: &views.Alert{
-			Level:   views.SuceessAlertLevel,
+			Level:   views.AlertLevelSuccess,
 			Message: "This is the success message",
 		},
 	}
