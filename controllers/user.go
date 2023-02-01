@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/abanoub-fathy/bebo-gallery/model"
@@ -33,14 +34,7 @@ type SignUpForm struct {
 }
 
 func (u *User) SignUpPage(w http.ResponseWriter, r *http.Request) {
-	params := views.Params{
-		Alert: &views.Alert{
-			Level:   views.AlertLevelSuccess,
-			Message: "This is the success message",
-		},
-	}
-
-	u.SignUpView.Render(w, params)
+	u.SignUpView.Render(w, views.Params{})
 }
 
 // CreateNewUser is a handler func that will receive data from sigup Form
@@ -48,12 +42,22 @@ func (u *User) SignUpPage(w http.ResponseWriter, r *http.Request) {
 //
 // and save it to the database
 func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
+	// define view params data
+	params := views.Params{}
+
 	// define signUpForm
 	var form SignUpForm
 
 	// Parse the form
 	if err := utils.ParseForm(r, &form); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		// create an alert to be displayed
+		params.Alert = views.NewAlert(views.AlertLevelError, views.ErrMsgGeneric)
+
+		// log the error
+		log.Println(err)
+
+		// render signup view with params
+		u.SignUpView.Render(w, params)
 		return
 	}
 
@@ -66,10 +70,19 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.UserService.CreateUser(user); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// create an alert to be displayed
+		params.Alert = views.NewAlert(views.AlertLevelError, err.Error())
+
+		// log the error
+		log.Println(err)
+
+		// render signup view with params
+		u.SignUpView.Render(w, params)
 		return
 	}
+
 	setRemeberTokenToCookie(w, user)
+
 	http.Redirect(w, r, "/cookie", http.StatusFound)
 	// fmt.Fprintln(w, "id=", user.ID, "email=", user.Email, "firstName=", user.FirstName, "lastName=", user.LastName)
 }
