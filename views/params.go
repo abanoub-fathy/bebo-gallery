@@ -6,12 +6,24 @@ type Alert struct {
 	Message string
 }
 
-// Alert levels
+// NewAlert is used to create a new alert
+// with level and message
+func NewAlert(level string, message string) *Alert {
+	return &Alert{
+		Level:   level,
+		Message: message,
+	}
+}
+
 const (
 	AlertLevelSuccess = "success"
 	AlertLevelInfo    = "info"
 	AlertLevelWarning = "warning"
 	AlertLevelError   = "danger"
+
+	// ErrMsgGeneric is usually used to represents
+	// unknown or unfiltered error message
+	ErrMsgGeneric = "something went wrong. please try again later or contact support"
 )
 
 // Params represents the params that we can pass to the template
