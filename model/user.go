@@ -14,34 +14,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	// ErrNotFound is returned when the resource can not be found from DB
-	ErrNotFound = errors.New("model: resource not found")
-
-	// ErrPasswordNotCorrect is returned when the password is wrong for user
-	ErrPasswordNotCorrect = errors.New("model: password is incorrect")
-
-	// ErrEmailNotValidFormat is not correct is used to tell that the email address is not valid
-	ErrEmailNotValidFormat = errors.New("email address is not valid")
-
-	// ErrEmailIsTaken
-	ErrEmailIsTaken = errors.New("email address is already taken")
-
-	// ErrPasswordTooShort is returned on password is less than 8 chars
-	ErrPasswordTooShort = errors.New("password should be at least 8 chars")
-
-	//ErrPasswordRequired
-	ErrPasswordRequired = errors.New("password can not be empty")
-
-	// ErrRememberRequired is returned when a create or update
-	// is attempted without a user remember token hash
-	ErrRememberTokenHashRequired = errors.New("models: remember token hash is required")
-
-	// ErrRememberTooShort is returned when a remember token is
-	// not at least 32 bytes
-	ErrRememberTooShort = errors.New("models: remember token must be at least 32 bytes")
-)
-
 // User is a tyype represent our user model
 // in the database it is used for user accounts.
 type User struct {
