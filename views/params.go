@@ -32,3 +32,28 @@ type Params struct {
 	Alert *Alert
 	Data  interface{}
 }
+
+// SetAlert is used to set alert in the the params
+// that passed to templates
+//
+// it can return public error message or
+// the generic error messge dependant on the
+// kind of the error it receives.
+func (p *Params) SetAlert(err error) {
+	if pErr, ok := err.(PublicError); ok {
+		// if the error is public error
+		p.Alert = NewAlert(AlertLevelError, pErr.PublicErrMsg())
+	} else {
+		p.Alert = NewAlert(AlertLevelError, ErrMsgGeneric)
+	}
+}
+
+// PublicError represnets error that can be
+// used to be shown to end user
+type PublicError interface {
+	error
+
+	// PublicErrMsg is the method we use to return
+	// the public error message as string value
+	PublicErrMsg() string
+}
