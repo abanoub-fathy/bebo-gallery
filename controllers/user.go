@@ -33,10 +33,6 @@ type SignUpForm struct {
 	Password  string `schema:"password,required"`
 }
 
-func (u *User) SignUpPage(w http.ResponseWriter, r *http.Request) {
-	u.SignUpView.Render(w, views.Params{})
-}
-
 // CreateNewUser is a handler func that will receive data from sigup Form
 // and create a new user
 //
@@ -50,8 +46,8 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the form
 	if err := utils.ParseForm(r, &form); err != nil {
-		// create an alert to be displayed
-		params.Alert = views.NewAlert(views.AlertLevelError, views.ErrMsgGeneric)
+		// set the alert
+		params.SetAlert(err)
 
 		// log the error
 		log.Println(err)
@@ -70,8 +66,8 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.UserService.CreateUser(user); err != nil {
-		// create an alert to be displayed
-		params.Alert = views.NewAlert(views.AlertLevelError, err.Error())
+		// set alert to be displayed
+		params.SetAlert(err)
 
 		// log the error
 		log.Println(err)
