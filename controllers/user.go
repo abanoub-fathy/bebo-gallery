@@ -92,34 +92,40 @@ type LoginForm struct {
 //
 // and log user in
 func (u *User) Login(w http.ResponseWriter, r *http.Request) {
+	// define params
+	params := views.Params{}
+
 	// define loginForm
 	form := LoginForm{}
 
 	// Parse the form
 	if err := utils.ParseForm(r, &form); err != nil {
-		panic(err)
+		params.SetAlert(err)
+		u.LogInView.Render(w, params)
+		return
 	}
 
 	// authenticate user
 	user, err := u.UserService.AuthenticateUser(form.Email, form.Password)
 	if err != nil {
 		switch err {
-		case model.ErrEmailNotValidFormat:
-			fmt.Fprintln(w, "not valid email address")
+		case model.ErrEmailNotValidFormat, model.ErrPasswordNotCorrect:
+			params.SetAlert(err)
 		case model.ErrNotFound:
-			fmt.Fprintln(w, "user email not found")
-		case model.ErrPasswordNotCorrect:
-			fmt.Fprintln(w, "password is incorrect")
+			params.SetAlertWithErrMsg("Email address is not found")
 		default:
-			fmt.Fprintln(w, err)
+			params.SetAlert(err)
 		}
-		// return after printing error
+		// render login page with alert
+		u.LogInView.Render(w, params)
 		return
 	}
 
 	// set remember token to user
 	if err := u.UserService.SaveNewRemeberToken(user); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		params.SetAlert(err)
+		u.LogInView.Render(w, params)
+		return
 	}
 
 	// set remeber token in the cookie
