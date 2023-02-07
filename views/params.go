@@ -48,6 +48,14 @@ func (p *Params) SetAlert(err error) {
 	}
 }
 
+// SetAlertWithErrMsg is used to set alert with
+// specific err message.
+//
+// the error message will be shown to the end user
+func (p *Params) SetAlertWithErrMsg(errMsg string) {
+	p.Alert = NewAlert(AlertLevelError, errMsg)
+}
+
 // PublicError represnets error that can be
 // used to be shown to end user
 type PublicError interface {
