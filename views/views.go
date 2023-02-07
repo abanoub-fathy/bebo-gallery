@@ -1,7 +1,9 @@
 package views
 
 import (
+	"bytes"
 	"html/template"
+	"log"
 	"net/http"
 	"path/filepath"
 )
@@ -59,14 +61,30 @@ func getLayoutFiles() []string {
 // now the *view type can be used as a Handler type
 func (view *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := view.Render(w, Params{}); err != nil {
-		panic(err)
+		log.Println("error occured while rendering template", err.Error())
 	}
 }
 
 // Render is used to render a view based on the predefined layout
 func (view *View) Render(w http.ResponseWriter, params Params) error {
 	w.Header().Set("Content-Type", "text/html")
-	return view.Template.ExecuteTemplate(w, view.Layout, params)
+
+	// create a buffer to execute template into first
+	buffer := bytes.Buffer{}
+
+	// execute template into the buffer
+	if err := view.Template.ExecuteTemplate(&buffer, view.Layout, params); err != nil {
+		http.Error(w, "something went wrong from our side. if the problem presists please contact support", http.StatusInternalServerError)
+		return err
+	}
+
+	// write the data from buffer to the responseWriter
+	if _, err := buffer.WriteTo(w); err != nil {
+		return err
+	}
+
+	// return nil when no error while Rendering the template
+	return nil
 }
 
 // addTemplatePath takes in a slice of strings
