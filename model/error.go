@@ -37,11 +37,11 @@ const (
 
 	// ErrRememberRequired is returned when a create or update
 	// is attempted without a user remember token hash
-	ErrRememberTokenHashRequired publicError = "models: remember token hash is required"
+	ErrRememberTokenHashRequired publicError = "model: remember token hash is required"
 
 	// ErrRememberTooShort is returned when a remember token is
 	// not at least 32 bytes
-	ErrRememberTooShort publicError = "models: remember token must be at least 32 bytes"
+	ErrRememberTooShort publicError = "model: remember token must be at least 32 bytes"
 )
 
 func (e publicError) Error() string {
@@ -49,7 +49,7 @@ func (e publicError) Error() string {
 }
 
 func (e publicError) PublicErrMsg() string {
-	errMsg := strings.Replace(string(e), "models: ", "", 1)
+	errMsg := strings.Replace(string(e), "model: ", "", 1)
 	parts := strings.Split(errMsg, " ")
 	if len(parts) > 0 {
 		parts[0] = cases.Title(language.English, cases.NoLower).String(parts[0])
