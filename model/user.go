@@ -25,6 +25,7 @@ type User struct {
 	PasswordHash     string `gorm:"not null"`
 	RememberToken    string `gorm:"-"`
 	RemeberTokenHash string `gorm:"unique;index"`
+	Galleries        []Gallery
 }
 
 // UserDB is used to interact with the users database.
