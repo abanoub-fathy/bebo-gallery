@@ -20,17 +20,19 @@ func main() {
 	// Database URI
 	var DB_URI = os.Getenv("DATABASE_URI")
 
-	// create new UserService
-	userService, err := model.NewUserService(DB_URI)
+	// create new service
+	service, err := model.NewService(DB_URI)
 	if err != nil {
 		panic(err)
 	}
-	defer userService.Close()
+
+	// TODO: we need to (close and migrate) from the service db top level
+	defer service.UserService.Close()
 	// must(userService.ResetUserDB())
-	must(userService.AutoMigrate())
+	must(service.UserService.AutoMigrate())
 
 	// create new user controller
-	userController := controllers.NewUser(userService)
+	userController := controllers.NewUser(service.UserService)
 
 	// create StaticController
 	staticController := controllers.NewStatic()

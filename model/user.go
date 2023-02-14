@@ -10,7 +10,6 @@ import (
 	"github.com/abanoub-fathy/bebo-gallery/rand"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -68,20 +67,14 @@ type userGorm struct {
 	hasher *hash.Hasher
 }
 
-// newUserService creates a new userService to
-// interact with users
-func newUserGorm(DB_URI string) (*userGorm, error) {
-	// connect to DB
-	db, err := gorm.Open(postgres.Open(DB_URI), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
-	// return userService
+// newUserGorm creates a new userGorm
+// that implements the the UserDB interface
+func newUserGorm(db *gorm.DB) *userGorm {
+	// return userGorm object
 	return &userGorm{
 		db:     db,
 		hasher: hash.NewHasher(os.Getenv("HASH_SECRET_KEY")),
-	}, nil
+	}
 }
 
 var _ UserDB = &userGorm{}
@@ -110,12 +103,9 @@ var _ UserService = &userService{}
 
 // NewUserService creates a new userService to
 // interact with users
-func NewUserService(DB_URI string) (UserService, error) {
+func NewUserService(db *gorm.DB) UserService {
 	// create new userGorm
-	userGorm, err := newUserGorm(DB_URI)
-	if err != nil {
-		return nil, err
-	}
+	userGorm := newUserGorm(db)
 
 	// create userValidator
 	userValidator := newUserValidator(userGorm, hash.NewHasher(os.Getenv("HASH_SECRET_KEY")))
@@ -126,7 +116,7 @@ func NewUserService(DB_URI string) (UserService, error) {
 	}
 
 	// return
-	return userService, nil
+	return userService
 }
 
 type userValidator struct {

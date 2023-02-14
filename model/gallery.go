@@ -29,6 +29,14 @@ type galleryGorm struct {
 	db *gorm.DB
 }
 
+// NewGalleryGorm is used to create a gallery gorm
+// that implements the GalleryDB interface
+func NewGalleryGorm(db *gorm.DB) *galleryGorm {
+	return &galleryGorm{
+		db: db,
+	}
+}
+
 // making sure that galleryGorm implemnts the GalleryDB
 var _ GalleryDB = (*galleryGorm)(nil)
 
