@@ -40,6 +40,7 @@ func (s *UserServiceSuite) TestCreateUser() {
 		FirstName: "Abanoub",
 		LastName:  "Fathy",
 		Email:     "aop4ever@gmail.com",
+		Password:  "12212154554554asdsa",
 	}
 	err := s.UserService.CreateUser(&user)
 	s.Require().NoError(err, "It should be no error while create user")
