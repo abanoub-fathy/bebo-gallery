@@ -51,13 +51,6 @@ type UserDB interface {
 	FindAndDeleteByID(userID string) (*User, error)
 	Save(user *User) error
 	SaveNewRemeberToken(user *User) error
-
-	// Used to close a DB connection
-	Close() error
-
-	// Migration helpers
-	AutoMigrate() error
-	ResetUserDB() error
 }
 
 // userGorm represents our database interaction layer
@@ -488,33 +481,6 @@ func (ug *userGorm) FindUserByRememberToken(hashedToken string) (*User, error) {
 
 	// return user
 	return user, err
-}
-
-// Close used to close userService database connection
-func (ug *userGorm) Close() error {
-	sqlDB, err := ug.db.DB()
-	if err != nil {
-		return err
-	}
-	if err := sqlDB.Close(); err != nil {
-		return err
-	}
-	return nil
-}
-
-// AutoMigrate is used to auto migrate user table into the database
-func (ug *userGorm) AutoMigrate() error {
-	return ug.db.AutoMigrate(&User{})
-}
-
-// ResetUserDB is used to drop user table and create new one
-func (ug *userGorm) ResetUserDB() error {
-	if err := ug.db.Migrator().DropTable(&User{}); err != nil {
-		return err
-	}
-
-	// auto migrate user
-	return ug.AutoMigrate()
 }
 
 func getRecord(query *gorm.DB, destination interface{}) error {
