@@ -5,34 +5,30 @@ import (
 
 	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/stretchr/testify/suite"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 type UserServiceSuite struct {
 	suite.Suite
-	model.UserService
+	*model.Service
 }
 
 func (s *UserServiceSuite) SetupSuite() {
 	// create new user service
 	const DB_URI = "postgresql://postgres:popTop123@localhost:5432/bebo-gallery_test?sslmode=disable"
 
-	// open db connection to be used in all services
-	db, err := gorm.Open(postgres.Open(DB_URI), &gorm.Config{})
+	// create new service
+	service, err := model.NewService(DB_URI)
 	if err != nil {
-		s.T().Fatal("Unable to Open db connection. Error:", err)
+		s.T().Fatal("Unable to create service", err)
 	}
 
 	// create new UserService
-	userService := model.NewUserService(db)
-
-	s.UserService = userService
+	s.Service = service
 }
 
 func (s *UserServiceSuite) SetupTest() {
-	// Drop existing tables in test database
-	s.UserService.ResetUserDB()
+	// Reset all the data in the DB
+	s.Service.ResetDB()
 }
 
 func (s *UserServiceSuite) TestCreateUser() {
