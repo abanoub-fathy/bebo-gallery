@@ -26,10 +26,11 @@ func main() {
 		panic(err)
 	}
 
-	// TODO: we need to (close and migrate) from the service db top level
-	defer service.UserService.Close()
-	// must(userService.ResetUserDB())
-	must(service.UserService.AutoMigrate())
+	// defer closing the services
+	defer service.Close()
+
+	// migrate all the models to the DB
+	must(service.AutoMigrate())
 
 	// create new user controller
 	userController := controllers.NewUser(service.UserService)
