@@ -7,6 +7,7 @@ import (
 
 	"github.com/abanoub-fathy/bebo-gallery/controllers"
 	"github.com/abanoub-fathy/bebo-gallery/model"
+	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -30,7 +31,7 @@ func main() {
 	defer service.Close()
 
 	// migrate all the models to the DB
-	must(service.AutoMigrate())
+	utils.Must(service.AutoMigrate())
 
 	// create new user controller
 	userController := controllers.NewUser(service.UserService)
@@ -51,12 +52,5 @@ func main() {
 
 	// start the app
 	fmt.Println("🚀🚀 Server is working on http://localhost:3000")
-	must(http.ListenAndServe(":3000", r))
-}
-
-// must is used to panic an error if exist
-func must(err error) {
-	if err != nil {
-		panic(err)
-	}
+	utils.Must(http.ListenAndServe(":3000", r))
 }
