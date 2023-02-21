@@ -39,16 +39,26 @@ func main() {
 	// create StaticController
 	staticController := controllers.NewStatic()
 
+	// create gallery controllers
+	galleryController := controllers.NewGallery(service.GalleryService)
+
 	// set router
 	r := mux.NewRouter()
+
+	// static routes
 	r.Handle("/", staticController.Home).Methods("GET")
 	r.Handle("/contact", staticController.Contact).Methods("GET")
+	r.NotFoundHandler = staticController.NotFound
+
+	// user routes
 	r.Handle("/signup", userController.SignUpView).Methods("GET")
 	r.HandleFunc("/new", userController.CreateNewUser).Methods("POST")
 	r.Handle("/login", userController.LogInView).Methods("GET")
 	r.HandleFunc("/login", userController.Login).Methods("POST")
 	r.HandleFunc("/cookie", userController.CookieTest).Methods("GET")
-	r.NotFoundHandler = staticController.NotFound
+
+	// gallery routes
+	r.Handle("/galleries/new", galleryController.CreateGalleryView).Methods("GET")
 
 	// start the app
 	fmt.Println("🚀🚀 Server is working on http://localhost:3000")
