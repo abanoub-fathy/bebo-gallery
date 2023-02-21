@@ -21,9 +21,7 @@ func main() {
 
 	// create new service
 	service, err := model.NewService(DB_URI)
-	if err != nil {
-		panic(err)
-	}
+	utils.Must(err)
 
 	// defer closing the services
 	defer service.Close()
@@ -31,22 +29,19 @@ func main() {
 	// migrate all the models to the DB
 	utils.Must(service.AutoMigrate())
 
-	// create new user controller
-	userController := controllers.NewUser(service.UserService)
+	// set router
+	r := mux.NewRouter()
 
 	// create StaticController
 	staticController := controllers.NewStatic()
-
-	// create gallery controllers
-	galleryController := controllers.NewGallery(service.GalleryService)
-
-	// set router
-	r := mux.NewRouter()
 
 	// static routes
 	r.Handle("/", staticController.Home).Methods("GET")
 	r.Handle("/contact", staticController.Contact).Methods("GET")
 	r.NotFoundHandler = staticController.NotFound
+
+	// create new user controller
+	userController := controllers.NewUser(service.UserService)
 
 	// user routes
 	r.Handle("/signup", userController.SignUpView).Methods("GET")
@@ -54,6 +49,9 @@ func main() {
 	r.Handle("/login", userController.LogInView).Methods("GET")
 	r.HandleFunc("/login", userController.Login).Methods("POST")
 	r.HandleFunc("/cookie", userController.CookieTest).Methods("GET")
+
+	// create gallery controllers
+	galleryController := controllers.NewGallery(service.GalleryService)
 
 	// gallery routes
 	r.Handle("/galleries/new", galleryController.CreateGalleryView).Methods("GET")
