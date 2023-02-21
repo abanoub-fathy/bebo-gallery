@@ -13,10 +13,8 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		panic(err)
-	}
+	// load env file
+	utils.Must(godotenv.Load())
 
 	// Database URI
 	var DB_URI = os.Getenv("DATABASE_URI")
