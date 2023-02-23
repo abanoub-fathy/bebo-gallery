@@ -1,8 +1,15 @@
 package model
 
 import (
+	"strings"
+
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
+)
+
+const (
+	ErrUserIDRequired       publicError = "model: user id is required"
+	ErrGalleryTitleRequired publicError = "model: gallery title is required"
 )
 
 // Gallery is the container for images we will add
@@ -10,6 +17,21 @@ type Gallery struct {
 	Base
 	Title  string    `gorm:"not_null"`
 	UserID uuid.UUID `gorm:"not_null;index"`
+}
+
+// galleryValidationFunc is a type for gallery validation
+// functions.
+//
+// these functions receives refernce to gallery and return error
+type galleryValidationFn func(*Gallery) error
+
+func runGalleryValidationFns(gallery *Gallery, fns ...galleryValidationFn) error {
+	for _, fn := range fns {
+		if err := fn(gallery); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type GalleryService interface {
@@ -29,6 +51,32 @@ type galleryService struct {
 
 type galleryValidator struct {
 	GalleryDB
+}
+
+func (gv *galleryValidator) validateGalleryUserID(g *Gallery) error {
+	if g.UserID.String() == "00000000-0000-0000-0000-000000000000" {
+		return ErrUserIDRequired
+	}
+	return nil
+}
+
+func (gv *galleryValidator) validateGalleryTitle(g *Gallery) error {
+	if strings.TrimSpace(g.Title) == "" {
+		return ErrGalleryTitleRequired
+	}
+	return nil
+}
+
+func (gv *galleryValidator) CreateGallery(gallery *Gallery) error {
+	err := runGalleryValidationFns(gallery,
+		gv.validateGalleryTitle,
+		gv.validateGalleryUserID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return gv.GalleryDB.CreateGallery(gallery)
 }
 
 // NewGalleryService is used to return GalleryService

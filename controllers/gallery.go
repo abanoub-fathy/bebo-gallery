@@ -23,7 +23,7 @@ func NewGallery(galleryService model.GalleryService) *Gallery {
 }
 
 type createGalleryForm struct {
-	Title string `schema:"title,required"`
+	Title string `schema:"title"`
 }
 
 func (g *Gallery) CreateNewGallery(w http.ResponseWriter, r *http.Request) {
