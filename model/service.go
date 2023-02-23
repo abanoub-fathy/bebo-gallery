@@ -25,7 +25,7 @@ func NewService(DB_URI string) (*Service, error) {
 
 	service := &Service{
 		db:             db,
-		GalleryService: NewGalleryGorm(db),
+		GalleryService: NewGalleryService(db),
 		UserService:    NewUserService(db),
 	}
 

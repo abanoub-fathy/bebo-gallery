@@ -23,6 +23,27 @@ type GalleryDB interface {
 	CreateGallery(gallery *Gallery) error
 }
 
+type galleryService struct {
+	GalleryDB
+}
+
+type galleryValidator struct {
+	GalleryDB
+}
+
+// NewGalleryService is used to return GalleryService
+// with its layers first layer is the validator the second
+// is the gorm layer
+func NewGalleryService(db *gorm.DB) GalleryService {
+	return &galleryService{
+		GalleryDB: &galleryValidator{
+			GalleryDB: &galleryGorm{
+				db: db,
+			},
+		},
+	}
+}
+
 // galleryGorm is the type that will implements the
 // the GalleryDB for gorm
 type galleryGorm struct {
