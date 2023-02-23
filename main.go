@@ -55,6 +55,7 @@ func main() {
 
 	// gallery routes
 	r.Handle("/galleries/new", galleryController.CreateGalleryView).Methods("GET")
+	r.HandleFunc("/galleries", galleryController.CreateNewGallery).Methods("POST")
 
 	// start the app
 	fmt.Println("🚀🚀 Server is working on http://localhost:3000")
