@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/abanoub-fathy/bebo-gallery/controllers"
+	"github.com/abanoub-fathy/bebo-gallery/middlewares"
 	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/gorilla/mux"
@@ -28,6 +29,11 @@ func main() {
 
 	// migrate all the models to the DB
 	utils.Must(service.AutoMigrate())
+
+	// creat middleware
+	requireUserMiddleWare := middlewares.RequireUser{
+		Service: service,
+	}
 
 	// set router
 	r := mux.NewRouter()
@@ -54,8 +60,8 @@ func main() {
 	galleryController := controllers.NewGallery(service.GalleryService)
 
 	// gallery routes
-	r.Handle("/galleries/new", galleryController.CreateGalleryView).Methods("GET")
-	r.HandleFunc("/galleries", galleryController.CreateNewGallery).Methods("POST")
+	r.Handle("/galleries/new", requireUserMiddleWare.Apply(galleryController.CreateGalleryView)).Methods("GET")
+	r.HandleFunc("/galleries", requireUserMiddleWare.ApplyFunc(galleryController.CreateNewGallery)).Methods("POST")
 
 	// start the app
 	fmt.Println("🚀🚀 Server is working on http://localhost:3000")
