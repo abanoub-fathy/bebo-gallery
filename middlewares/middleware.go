@@ -34,6 +34,6 @@ func (mw *RequireUser) ApplyFunc(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func (mw *RequireUser) Apply(next http.Handler) http.HandlerFunc {
+func (mw *RequireUser) Apply(next http.Handler) http.Handler {
 	return mw.ApplyFunc(next.ServeHTTP)
 }
