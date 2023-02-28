@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/abanoub-fathy/bebo-gallery/hash"
-	"github.com/abanoub-fathy/bebo-gallery/rand"
+	"github.com/abanoub-fathy/bebo-gallery/pkg/hash"
+	"github.com/abanoub-fathy/bebo-gallery/pkg/rand"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
