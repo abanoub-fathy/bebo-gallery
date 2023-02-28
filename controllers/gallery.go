@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/abanoub-fathy/bebo-gallery/model"
+	"github.com/abanoub-fathy/bebo-gallery/pkg/context"
 	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/abanoub-fathy/bebo-gallery/views"
 )
@@ -43,8 +44,12 @@ func (g *Gallery) CreateNewGallery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get user from ctx
+	user := context.UserValue(r.Context())
+
 	gallery := &model.Gallery{
-		Title: form.Title,
+		Title:  form.Title,
+		UserID: user.ID,
 	}
 
 	err := g.GalleryService.CreateGallery(gallery)
