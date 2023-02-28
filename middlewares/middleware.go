@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/abanoub-fathy/bebo-gallery/pkg/context"
+
 	"github.com/abanoub-fathy/bebo-gallery/model"
 )
 
@@ -22,12 +24,21 @@ func (mw *RequireUser) ApplyFunc(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		// get the user from token
-		_, err = mw.Service.UserService.FindUserByRememberToken(token.Value)
+		user, err := mw.Service.UserService.FindUserByRememberToken(token.Value)
 		if err != nil {
 			fmt.Println("error while getting user from cookie", err)
 			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 			return
 		}
+
+		// get ctx from request
+		ctx := r.Context()
+
+		// create context with user
+		ctx = context.WithUser(ctx, user)
+
+		// set the new ctx to request
+		r = r.WithContext(ctx)
 
 		// call the next handler func
 		next(w, r)
