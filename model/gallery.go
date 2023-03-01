@@ -10,6 +10,9 @@ import (
 const (
 	ErrUserIDRequired       publicError = "model: user id is required"
 	ErrGalleryTitleRequired publicError = "model: gallery title is required"
+	ErrInvalidID            publicError = "model: not valid id"
+
+	ZeroID = "00000000-0000-0000-0000-000000000000"
 )
 
 // Gallery is the container for images we will add
@@ -43,6 +46,9 @@ type GalleryService interface {
 type GalleryDB interface {
 	// CreateGallery is used to create a new gallery into the DB
 	CreateGallery(gallery *Gallery) error
+
+	// GetGalleryByID is used to get specific gallery by its id
+	FindByID(ID string) (*Gallery, error)
 }
 
 type galleryService struct {
@@ -54,7 +60,7 @@ type galleryValidator struct {
 }
 
 func (gv *galleryValidator) validateGalleryUserID(g *Gallery) error {
-	if g.UserID.String() == "00000000-0000-0000-0000-000000000000" {
+	if g.UserID.String() == ZeroID {
 		return ErrUserIDRequired
 	}
 	return nil
@@ -77,6 +83,15 @@ func (gv *galleryValidator) CreateGallery(gallery *Gallery) error {
 	}
 
 	return gv.GalleryDB.CreateGallery(gallery)
+}
+
+func (gv *galleryValidator) FindByID(ID string) (*Gallery, error) {
+	parsedUUID := uuid.FromStringOrNil(ID)
+	if parsedUUID.String() == ZeroID {
+		return nil, ErrInvalidID
+	}
+
+	return gv.GalleryDB.FindByID(ID)
 }
 
 // NewGalleryService is used to return GalleryService
@@ -111,4 +126,15 @@ var _ GalleryDB = (*galleryGorm)(nil)
 
 func (gg *galleryGorm) CreateGallery(gallery *Gallery) error {
 	return gg.db.Create(&gallery).Error
+}
+
+func (gg *galleryGorm) FindByID(ID string) (*Gallery, error) {
+	gallery := new(Gallery)
+	query := gg.db.Where(Gallery{
+		Base: Base{
+			ID: uuid.FromStringOrNil(ID),
+		},
+	})
+	err := getRecord(query, &gallery)
+	return gallery, err
 }
