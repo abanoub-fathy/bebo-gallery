@@ -60,6 +60,7 @@ func main() {
 	galleryController := controllers.NewGallery(service.GalleryService)
 
 	// gallery routes
+	r.HandleFunc("/galleries/{galleryID}", galleryController.ViewGallery).Methods("GET")
 	r.Handle("/galleries/new", requireUserMiddleWare.Apply(galleryController.CreateGalleryView)).Methods("GET")
 	r.HandleFunc("/galleries", requireUserMiddleWare.ApplyFunc(galleryController.CreateNewGallery)).Methods("POST")
 
