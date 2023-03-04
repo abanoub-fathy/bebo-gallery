@@ -11,19 +11,25 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const (
+	ViewGalleryEndpoint = "view_gallery_endpoint"
+)
+
 type Gallery struct {
 	ShowGalleryView   *views.View
 	CreateGalleryView *views.View
 	GalleryService    model.GalleryService
+	router            *mux.Router
 }
 
 // NewGallery return a pointer to Gallery type which can be used
 // as a receiver to call the handler functions
-func NewGallery(galleryService model.GalleryService) *Gallery {
+func NewGallery(galleryService model.GalleryService, muxRouter *mux.Router) *Gallery {
 	return &Gallery{
 		ShowGalleryView:   views.NewView("base", "gallery/gallery"),
 		CreateGalleryView: views.NewView("base", "gallery/new"),
 		GalleryService:    galleryService,
+		router:            muxRouter,
 	}
 }
 
@@ -84,5 +90,11 @@ func (g *Gallery) CreateNewGallery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("created successfully"))
+	url, err := g.router.GetRoute(ViewGalleryEndpoint).URL("galleryID", gallery.ID.String())
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, url.String(), http.StatusFound)
 }
