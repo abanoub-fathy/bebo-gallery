@@ -71,11 +71,6 @@ func (g *Gallery) EditGalleryPage(w http.ResponseWriter, r *http.Request) {
 
 	// get user from conext
 	user := context.UserValue(r.Context())
-	if user == nil {
-		// redirect user to not found
-		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
-		return
-	}
 
 	// check that the user own the gallery
 	if !uuid.Equal(user.ID, gallery.UserID) {
@@ -86,6 +81,56 @@ func (g *Gallery) EditGalleryPage(w http.ResponseWriter, r *http.Request) {
 
 	// render the gallery
 	err = g.EditGalleryView.Render(w, views.Params{
+		Data: gallery,
+	})
+	if err != nil {
+		fmt.Println("err while rendering gallery", err)
+	}
+}
+
+func (g *Gallery) EditGallery(w http.ResponseWriter, r *http.Request) {
+	// get gallery id variable
+	galleryID := mux.Vars(r)["galleryID"]
+
+	// fetch gallery by id
+	gallery, err := g.GalleryService.FindByID(galleryID)
+	if err != nil {
+		// redirect user to not found
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// get user from conext
+	user := context.UserValue(r.Context())
+
+	// check that the user own the gallery
+	if !uuid.Equal(user.ID, gallery.UserID) {
+		// redirect user to not found
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// define view params data
+	params := views.Params{}
+
+	// define createGalleryForm
+	var form createGalleryForm
+
+	// Parse the form
+	if err := utils.ParseForm(r, &form); err != nil {
+		// set the alert
+		params.SetAlert(err)
+
+		// render the create gallery view with params
+		g.EditGalleryView.Render(w, params)
+		return
+	}
+
+	// update the gallery
+	gallery.Title = form.Title
+
+	// render the gallery
+	err = g.ShowGalleryView.Render(w, views.Params{
 		Data: gallery,
 	})
 	if err != nil {
