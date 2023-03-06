@@ -9,6 +9,7 @@ import (
 	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/abanoub-fathy/bebo-gallery/views"
 	"github.com/gorilla/mux"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -63,6 +64,21 @@ func (g *Gallery) EditGalleryPage(w http.ResponseWriter, r *http.Request) {
 	// fetch gallery by id
 	gallery, err := g.GalleryService.FindByID(galleryID)
 	if err != nil {
+		// redirect user to not found
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// get user from conext
+	user := context.UserValue(r.Context())
+	if user == nil {
+		// redirect user to not found
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// check that the user own the gallery
+	if !uuid.Equal(user.ID, gallery.UserID) {
 		// redirect user to not found
 		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
 		return
