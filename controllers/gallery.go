@@ -14,6 +14,7 @@ import (
 type Gallery struct {
 	ShowGalleryView   *views.View
 	CreateGalleryView *views.View
+	EditGalleryView   *views.View
 	GalleryService    model.GalleryService
 }
 
@@ -23,6 +24,7 @@ func NewGallery(galleryService model.GalleryService) *Gallery {
 	return &Gallery{
 		ShowGalleryView:   views.NewView("base", "gallery/gallery"),
 		CreateGalleryView: views.NewView("base", "gallery/new"),
+		EditGalleryView:   views.NewView("base", "gallery/edit"),
 		GalleryService:    galleryService,
 	}
 }
@@ -41,6 +43,27 @@ func (g *Gallery) ViewGallery(w http.ResponseWriter, r *http.Request) {
 
 	// render the gallery
 	err = g.ShowGalleryView.Render(w, views.Params{
+		Data: gallery,
+	})
+	if err != nil {
+		fmt.Println("err while rendering gallery", err)
+	}
+}
+
+func (g *Gallery) EditGalleryPage(w http.ResponseWriter, r *http.Request) {
+	// get gallery id
+	galleryID := mux.Vars(r)["galleryID"]
+
+	// fetch gallery by id
+	gallery, err := g.GalleryService.FindByID(galleryID)
+	if err != nil {
+		// redirect user to not found
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// render the gallery
+	err = g.EditGalleryView.Render(w, views.Params{
 		Data: gallery,
 	})
 	if err != nil {

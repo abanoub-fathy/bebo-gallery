@@ -1,0 +1,23 @@
+{{define "content"}}
+<div class="card border-primary" style="max-width: 50rem; margin: auto;">
+  <div class="card-header bg-primary text-white">
+    Edit Gallery
+  </div>
+  <div class="card-body">
+    <h5 class="card-title">Edit your Gallery</h5>
+    <p class="card-text">
+      {{template "editGalleryForm" .Data}}
+    </p>
+  </div>
+</div>
+{{end}}
+
+{{define "editGalleryForm"}}
+<form method="POST" action="/galleries/{{.ID}}/edit" method="POST">
+  <div class="mb-3">
+    <label for="title" class="form-label"></label>
+    <input type="text" value="{{.Title}}" class="form-control" id="title" name="title" placeholder="What is the name of the gallery?">
+  </div>
+  <button type="submit" class="btn btn-primary">Update Gallery</button>
+</form>
+{{end}}
