@@ -142,11 +142,14 @@ func (g *Gallery) EditGallery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("%+v\n", gallery)
-
-	// redirect user to show gallery page
-	http.Redirect(w, r, fmt.Sprintf("/galleries/%v", gallery.ID.String()), http.StatusFound)
-
+	// show gallery view with alert
+	g.EditGalleryView.Render(w, views.Params{
+		Alert: &views.Alert{
+			Level:   views.AlertLevelSuccess,
+			Message: "Gallery is updated successfully!",
+		},
+		Data: gallery,
+	})
 }
 
 type createGalleryForm struct {
