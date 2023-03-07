@@ -47,8 +47,11 @@ type GalleryDB interface {
 	// CreateGallery is used to create a new gallery into the DB
 	CreateGallery(gallery *Gallery) error
 
-	// GetGalleryByID is used to get specific gallery by its id
+	// FindByID is used to get specific gallery by its id
 	FindByID(ID string) (*Gallery, error)
+
+	// Update is used to update gallery and return error if exists
+	Update(gallery *Gallery) error
 }
 
 type galleryService struct {
@@ -94,6 +97,18 @@ func (gv *galleryValidator) FindByID(ID string) (*Gallery, error) {
 	return gv.GalleryDB.FindByID(ID)
 }
 
+func (gv *galleryValidator) Update(gallery *Gallery) error {
+	err := runGalleryValidationFns(gallery,
+		gv.validateGalleryUserID,
+		gv.validateGalleryTitle,
+	)
+	if err != nil {
+		return err
+	}
+
+	return gv.GalleryDB.Update(gallery)
+}
+
 // NewGalleryService is used to return GalleryService
 // with its layers first layer is the validator the second
 // is the gorm layer
@@ -137,4 +152,8 @@ func (gg *galleryGorm) FindByID(ID string) (*Gallery, error) {
 	})
 	err := getRecord(query, &gallery)
 	return gallery, err
+}
+
+func (gg *galleryGorm) Update(gallery *Gallery) error {
+	return gg.db.Save(&gallery).Error
 }
