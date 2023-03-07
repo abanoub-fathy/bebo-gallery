@@ -129,13 +129,24 @@ func (g *Gallery) EditGallery(w http.ResponseWriter, r *http.Request) {
 	// update the gallery
 	gallery.Title = form.Title
 
-	// render the gallery
-	err = g.ShowGalleryView.Render(w, views.Params{
-		Data: gallery,
-	})
+	err = g.GalleryService.Update(gallery)
 	if err != nil {
-		fmt.Println("err while rendering gallery", err)
+		// set the alert
+		params.SetAlert(err)
+
+		// set the gallery to the data
+		params.Data = gallery
+
+		// render the create gallery view with params
+		g.EditGalleryView.Render(w, params)
+		return
 	}
+
+	fmt.Printf("%+v\n", gallery)
+
+	// redirect user to show gallery page
+	http.Redirect(w, r, fmt.Sprintf("/galleries/%v", gallery.ID.String()), http.StatusFound)
+
 }
 
 type createGalleryForm struct {
