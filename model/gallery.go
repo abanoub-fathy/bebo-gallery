@@ -52,6 +52,9 @@ type GalleryDB interface {
 
 	// Update is used to update gallery and return error if exists
 	Update(gallery *Gallery) error
+
+	// Delete
+	Delete(gallery *Gallery) error
 }
 
 type galleryService struct {
@@ -156,4 +159,8 @@ func (gg *galleryGorm) FindByID(ID string) (*Gallery, error) {
 
 func (gg *galleryGorm) Update(gallery *Gallery) error {
 	return gg.db.Save(&gallery).Error
+}
+
+func (gg *galleryGorm) Delete(gallery *Gallery) error {
+	return gg.db.Delete(gallery).Error
 }
