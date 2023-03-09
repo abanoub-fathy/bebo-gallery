@@ -18,6 +18,10 @@
     <label for="title" class="form-label"></label>
     <input type="text" value="{{.Title}}" class="form-control" id="title" name="title" placeholder="What is the name of the gallery?">
   </div>
-  <button type="submit" class="btn btn-primary">Update Gallery</button>
+  <button type="submit" class="btn btn-primary">Update</button>
+</form>
+
+<form method="POST" action="/galleries/{{.ID}}/delete" method="POST" style="position: absolute; right: 3%; bottom: 12.7%;">
+  <button type="submit" class="btn btn-danger">Delete</button>
 </form>
 {{end}}
