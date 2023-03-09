@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -195,4 +196,52 @@ func (g *Gallery) CreateNewGallery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, url.String(), http.StatusFound)
+}
+
+func (g *Gallery) DeleteGallery(w http.ResponseWriter, r *http.Request) {
+	// find gallery by id
+	galleryID := mux.Vars(r)["galleryID"]
+
+	// fetch the gallery by ID
+	gallery, err := g.GalleryService.FindByID(galleryID)
+	if err != nil {
+		switch err {
+		case model.ErrNotFound:
+			// redirect user to the 404 page
+			http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		default:
+			http.Error(w, "could not get gallery", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// get the user from context
+	user := context.UserValue(r.Context())
+
+	// check that the user own the gallery
+	if gallery.UserID != user.ID {
+		// redirect user to the 404 page
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// define view params
+	params := views.Params{}
+
+	// delete gallery
+	if err := g.GalleryService.Delete(gallery); err != nil {
+		// set alert and gallery
+		params.SetAlert(err)
+		params.Data = gallery
+
+		// redirect to edit page
+		g.EditGalleryView.Render(w, params)
+		return
+	}
+
+	// TODO: send to the user galleries page
+	// return the gallery
+	w.Header().Set("content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(gallery)
 }

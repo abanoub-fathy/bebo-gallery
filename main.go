@@ -65,6 +65,7 @@ func main() {
 	r.HandleFunc("/galleries", requireUserMiddleWare.ApplyFunc(galleryController.CreateNewGallery)).Methods("POST")
 	r.HandleFunc("/galleries/{galleryID}/edit", requireUserMiddleWare.ApplyFunc(galleryController.EditGalleryPage)).Methods("GET")
 	r.HandleFunc("/galleries/{galleryID}/edit", requireUserMiddleWare.ApplyFunc(galleryController.EditGallery)).Methods("POST")
+	r.HandleFunc("/galleries/{galleryID}/delete", requireUserMiddleWare.ApplyFunc(galleryController.DeleteGallery)).Methods("POST")
 
 	// start the app
 	fmt.Println("🚀🚀 Server is working on http://localhost:3000")
