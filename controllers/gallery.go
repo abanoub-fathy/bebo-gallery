@@ -18,22 +18,24 @@ const (
 )
 
 type Gallery struct {
-	ShowGalleryView   *views.View
-	CreateGalleryView *views.View
-	EditGalleryView   *views.View
-	GalleryService    model.GalleryService
-	router            *mux.Router
+	ShowGalleryView       *views.View
+	ShowUserGalleriesView *views.View
+	CreateGalleryView     *views.View
+	EditGalleryView       *views.View
+	GalleryService        model.GalleryService
+	router                *mux.Router
 }
 
 // NewGallery return a pointer to Gallery type which can be used
 // as a receiver to call the handler functions
 func NewGallery(galleryService model.GalleryService, muxRouter *mux.Router) *Gallery {
 	return &Gallery{
-		ShowGalleryView:   views.NewView("base", "gallery/gallery"),
-		CreateGalleryView: views.NewView("base", "gallery/new"),
-		EditGalleryView:   views.NewView("base", "gallery/edit"),
-		GalleryService:    galleryService,
-		router:            muxRouter,
+		ShowGalleryView:       views.NewView("base", "gallery/gallery"),
+		ShowUserGalleriesView: views.NewView("base", "gallery/user_galleries"),
+		CreateGalleryView:     views.NewView("base", "gallery/new"),
+		EditGalleryView:       views.NewView("base", "gallery/edit"),
+		GalleryService:        galleryService,
+		router:                muxRouter,
 	}
 }
 
@@ -55,6 +57,30 @@ func (g *Gallery) ViewGallery(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		fmt.Println("err while rendering gallery", err)
+	}
+}
+
+func (g *Gallery) ShowUserGalleriesPage(w http.ResponseWriter, r *http.Request) {
+	// get user from conext
+	user := context.UserValue(r.Context())
+
+	// get the galleries of the user
+	galleries, err := g.GalleryService.FindByUserID(user.ID)
+	if err != nil {
+		http.Error(w, "could not get galleries by used id", http.StatusInternalServerError)
+		fmt.Println("line 71 err = ", err)
+		return
+	}
+
+	// render user galleries page
+	params := views.Params{
+		Data: galleries,
+	}
+
+	if err = g.ShowUserGalleriesView.Render(w, params); err != nil {
+		http.Error(w, "could not show your galleries", http.StatusInternalServerError)
+		fmt.Println("line 81 err = ", err)
+		return
 	}
 }
 

@@ -55,6 +55,9 @@ type GalleryDB interface {
 
 	// Delete
 	Delete(gallery *Gallery) error
+
+	// FindByUserID
+	FindByUserID(userID uuid.UUID) ([]*Gallery, error)
 }
 
 type galleryService struct {
@@ -112,6 +115,20 @@ func (gv *galleryValidator) Update(gallery *Gallery) error {
 	return gv.GalleryDB.Update(gallery)
 }
 
+func (gv *galleryValidator) FindByUserID(userID uuid.UUID) ([]*Gallery, error) {
+	gallery := &Gallery{
+		UserID: userID,
+	}
+	err := runGalleryValidationFns(gallery,
+		gv.validateGalleryUserID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return gv.GalleryDB.FindByUserID(userID)
+}
+
 // NewGalleryService is used to return GalleryService
 // with its layers first layer is the validator the second
 // is the gorm layer
@@ -163,4 +180,15 @@ func (gg *galleryGorm) Update(gallery *Gallery) error {
 
 func (gg *galleryGorm) Delete(gallery *Gallery) error {
 	return gg.db.Delete(gallery).Error
+}
+
+func (gg *galleryGorm) FindByUserID(userID uuid.UUID) ([]*Gallery, error) {
+	galleries := []*Gallery{}
+	query := gg.db.Where(Gallery{
+		UserID: userID,
+	})
+	if err := gg.db.Find(&galleries, query).Error; err != nil {
+		return nil, err
+	}
+	return galleries, nil
 }
