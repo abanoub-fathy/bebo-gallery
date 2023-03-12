@@ -19,7 +19,7 @@ func (mw *RequireUser) ApplyFunc(next http.HandlerFunc) http.HandlerFunc {
 		token, err := r.Cookie("token")
 		if err != nil {
 			fmt.Println("error while getting cookie", err)
-			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 
@@ -27,7 +27,7 @@ func (mw *RequireUser) ApplyFunc(next http.HandlerFunc) http.HandlerFunc {
 		user, err := mw.Service.UserService.FindUserByRememberToken(token.Value)
 		if err != nil {
 			fmt.Println("error while getting user from cookie", err)
-			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 
