@@ -56,7 +56,7 @@ type GalleryDB interface {
 	// Delete
 	Delete(gallery *Gallery) error
 
-	// FindByUserID
+	// FindByUserID will be used to find user galler's
 	FindByUserID(userID uuid.UUID) ([]*Gallery, error)
 }
 
@@ -187,7 +187,7 @@ func (gg *galleryGorm) FindByUserID(userID uuid.UUID) ([]*Gallery, error) {
 	query := gg.db.Where(Gallery{
 		UserID: userID,
 	})
-	if err := gg.db.Find(&galleries, query).Error; err != nil {
+	if err := gg.db.Order("created_at DESC").Find(&galleries, query).Error; err != nil {
 		return nil, err
 	}
 	return galleries, nil
