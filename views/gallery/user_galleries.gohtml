@@ -1,10 +1,28 @@
 {{ define "content"}}
   <div class="row">
     <div class="col-md-12">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Created At</th>
+            <th scope="col">View</th>
+            <th scope="col">Edit</th>
+          </tr>
+        </thead>
+        <tbody>
+        {{range $i, $gallery := .Data}}
+          <tr>
+            <td>{{$gallery.Title}}</td>
+            <th scope="row">{{$gallery.CreatedAt}}</th>
+            <td><a class="btn btn-secondary" href="/galleries/{{$gallery.ID}}">View</a></td>
+            <td><a class="btn btn-secondary" href="/galleries/{{$gallery.ID}}/edit">Edit</a></td>
+          </tr>
+        {{end}}
+        </tbody>
+      </table>
 
-      {{range .Data}}
-        <h3>{{.Title}}</h3>
-      {{end}}
+      <a class="btn btn-primary" href="/galleries/new">Create New Gallery</a>      
     </div>
   </div>
 {{end}}
