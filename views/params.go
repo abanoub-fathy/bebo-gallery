@@ -31,6 +31,7 @@ const (
 type Params struct {
 	Alert *Alert
 	Data  interface{}
+	User  interface{}
 }
 
 // SetAlert is used to set alert in the the params

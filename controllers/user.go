@@ -55,7 +55,7 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 
 		// render signup view with params
-		u.SignUpView.Render(w, params)
+		u.SignUpView.Render(w, r, params)
 		return
 	}
 
@@ -75,7 +75,7 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 
 		// render signup view with params
-		u.SignUpView.Render(w, params)
+		u.SignUpView.Render(w, r, params)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	// Parse the form
 	if err := utils.ParseForm(r, &form); err != nil {
 		params.SetAlert(err)
-		u.LogInView.Render(w, params)
+		u.LogInView.Render(w, r, params)
 		return
 	}
 
@@ -125,14 +125,14 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 			params.SetAlert(err)
 		}
 		// render login page with alert
-		u.LogInView.Render(w, params)
+		u.LogInView.Render(w, r, params)
 		return
 	}
 
 	// set remember token to user
 	if err := u.UserService.SaveNewRemeberToken(user); err != nil {
 		params.SetAlert(err)
-		u.LogInView.Render(w, params)
+		u.LogInView.Render(w, r, params)
 		return
 	}
 

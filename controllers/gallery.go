@@ -53,7 +53,7 @@ func (g *Gallery) ViewGallery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// render the gallery
-	err = g.ShowGalleryView.Render(w, views.Params{
+	err = g.ShowGalleryView.Render(w, r, views.Params{
 		Data: gallery,
 	})
 	if err != nil {
@@ -77,7 +77,7 @@ func (g *Gallery) ShowUserGalleriesPage(w http.ResponseWriter, r *http.Request) 
 		Data: galleries,
 	}
 
-	if err = g.ShowUserGalleriesView.Render(w, params); err != nil {
+	if err = g.ShowUserGalleriesView.Render(w, r, params); err != nil {
 		http.Error(w, "could not show your galleries", http.StatusInternalServerError)
 		return
 	}
@@ -106,7 +106,7 @@ func (g *Gallery) EditGalleryPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// render the gallery
-	err = g.EditGalleryView.Render(w, views.Params{
+	err = g.EditGalleryView.Render(w, r, views.Params{
 		Data: gallery,
 	})
 	if err != nil {
@@ -148,7 +148,7 @@ func (g *Gallery) EditGallery(w http.ResponseWriter, r *http.Request) {
 		params.SetAlert(err)
 
 		// render the create gallery view with params
-		g.EditGalleryView.Render(w, params)
+		g.EditGalleryView.Render(w, r, params)
 		return
 	}
 
@@ -164,12 +164,12 @@ func (g *Gallery) EditGallery(w http.ResponseWriter, r *http.Request) {
 		params.Data = gallery
 
 		// render the create gallery view with params
-		g.EditGalleryView.Render(w, params)
+		g.EditGalleryView.Render(w, r, params)
 		return
 	}
 
 	// show gallery view with alert
-	g.EditGalleryView.Render(w, views.Params{
+	g.EditGalleryView.Render(w, r, views.Params{
 		Alert: &views.Alert{
 			Level:   views.AlertLevelSuccess,
 			Message: "Gallery is updated successfully!",
@@ -195,7 +195,7 @@ func (g *Gallery) CreateNewGallery(w http.ResponseWriter, r *http.Request) {
 		params.SetAlert(err)
 
 		// render the create gallery view with params
-		g.CreateGalleryView.Render(w, params)
+		g.CreateGalleryView.Render(w, r, params)
 		return
 	}
 
@@ -210,7 +210,7 @@ func (g *Gallery) CreateNewGallery(w http.ResponseWriter, r *http.Request) {
 	err := g.GalleryService.CreateGallery(gallery)
 	if err != nil {
 		params.SetAlert(err)
-		g.CreateGalleryView.Render(w, params)
+		g.CreateGalleryView.Render(w, r, params)
 		return
 	}
 
@@ -260,7 +260,7 @@ func (g *Gallery) DeleteGallery(w http.ResponseWriter, r *http.Request) {
 		params.Data = gallery
 
 		// redirect to edit page
-		g.EditGalleryView.Render(w, params)
+		g.EditGalleryView.Render(w, r, params)
 		return
 	}
 

@@ -60,13 +60,14 @@ func getLayoutFiles() []string {
 // ServeHttp is used to implement the Handler type
 // now the *view type can be used as a Handler type
 func (view *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if err := view.Render(w, Params{}); err != nil {
+	if err := view.Render(w, r, Params{}); err != nil {
 		log.Println("error occured while rendering template", err.Error())
 	}
 }
 
 // Render is used to render a view based on the predefined layout
-func (view *View) Render(w http.ResponseWriter, params Params) error {
+func (view *View) Render(w http.ResponseWriter, r *http.Request, params Params) error {
+	// set the content type
 	w.Header().Set("Content-Type", "text/html")
 
 	// create a buffer to execute template into first
