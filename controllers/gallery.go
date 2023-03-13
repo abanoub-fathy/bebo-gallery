@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -14,7 +13,8 @@ import (
 )
 
 const (
-	ViewGalleryEndpoint = "view_gallery_endpoint"
+	ViewGalleryEndpoint   = "view_gallery_endpoint"
+	ViewGalleriesEndpoint = "view_galleries_endpoint"
 )
 
 type Gallery struct {
@@ -68,7 +68,6 @@ func (g *Gallery) ShowUserGalleriesPage(w http.ResponseWriter, r *http.Request) 
 	galleries, err := g.GalleryService.FindByUserID(user.ID)
 	if err != nil {
 		http.Error(w, "could not get galleries by used id", http.StatusInternalServerError)
-		fmt.Println("line 71 err = ", err)
 		return
 	}
 
@@ -79,7 +78,6 @@ func (g *Gallery) ShowUserGalleriesPage(w http.ResponseWriter, r *http.Request) 
 
 	if err = g.ShowUserGalleriesView.Render(w, params); err != nil {
 		http.Error(w, "could not show your galleries", http.StatusInternalServerError)
-		fmt.Println("line 81 err = ", err)
 		return
 	}
 }
@@ -215,7 +213,7 @@ func (g *Gallery) CreateNewGallery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url, err := g.router.GetRoute(ViewGalleryEndpoint).URL("galleryID", gallery.ID.String())
+	url, err := g.router.GetRoute(ViewGalleriesEndpoint).URL()
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusInternalServerError)
 		return
@@ -265,9 +263,12 @@ func (g *Gallery) DeleteGallery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: send to the user galleries page
 	// return the gallery
-	w.Header().Set("content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(gallery)
+	url, err := g.router.GetRoute(ViewGalleriesEndpoint).URL()
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, url.String(), http.StatusFound)
 }
