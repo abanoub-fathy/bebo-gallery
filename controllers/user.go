@@ -1,27 +1,29 @@
 package controllers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/abanoub-fathy/bebo-gallery/views"
+	"github.com/gorilla/mux"
 )
 
 type User struct {
 	SignUpView  *views.View
 	LogInView   *views.View
 	UserService model.UserService
+	router      *mux.Router
 }
 
 // NewUser return a pointer to User type which can be used
 // as a receiver to call the handler functions
-func NewUser(userService model.UserService) *User {
+func NewUser(userService model.UserService, muxRouter *mux.Router) *User {
 	return &User{
 		SignUpView:  views.NewView("base", "user/new"),
 		LogInView:   views.NewView("base", "user/login"),
+		router:      muxRouter,
 		UserService: userService,
 	}
 }
@@ -77,10 +79,16 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// set remember token
 	setRemeberTokenToCookie(w, user)
 
-	http.Redirect(w, r, "/cookie", http.StatusFound)
-	// fmt.Fprintln(w, "id=", user.ID, "email=", user.Email, "firstName=", user.FirstName, "lastName=", user.LastName)
+	// redirect  user to create galleries page
+	url, err := u.router.GetRoute(ViewCreateGalleryEndpoint).URL()
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, url.String(), http.StatusFound)
 }
 
 type LoginForm struct {
@@ -130,25 +138,14 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 
 	// set remeber token in the cookie
 	setRemeberTokenToCookie(w, user)
-	http.Redirect(w, r, "/cookie", http.StatusFound)
 
-	// fmt.Fprintln(w, user)
-}
-
-func (u *User) CookieTest(w http.ResponseWriter, r *http.Request) {
-	token, err := r.Cookie("token")
+	// redirect to galleries page
+	url, err := u.router.GetRoute(ViewGalleriesEndpoint).URL()
 	if err != nil {
-		RedirectToLoginPage(w, r)
+		http.Redirect(w, r, "/", http.StatusInternalServerError)
 		return
 	}
-
-	user, err := u.UserService.FindUserByRememberToken(token.Value)
-	if err != nil {
-		RedirectToLoginPage(w, r)
-		return
-	}
-
-	fmt.Fprintf(w, "%+v\n", *user)
+	http.Redirect(w, r, url.String(), http.StatusFound)
 }
 
 // setRemeberTokenToCookie is used to set cookie for user in the response writer
@@ -161,8 +158,4 @@ func setRemeberTokenToCookie(w http.ResponseWriter, user *model.User) {
 	}
 	// set cookie in the response writer header
 	http.SetCookie(w, cookie)
-}
-
-func RedirectToLoginPage(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 }

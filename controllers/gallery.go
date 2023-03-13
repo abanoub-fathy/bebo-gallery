@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	ViewGalleryEndpoint   = "view_gallery_endpoint"
-	ViewGalleriesEndpoint = "view_galleries_endpoint"
+	ViewGalleryEndpoint       = "view_gallery_endpoint"
+	ViewGalleriesEndpoint     = "view_galleries_endpoint"
+	ViewCreateGalleryEndpoint = "view_create_gallery_end_point"
 )
 
 type Gallery struct {

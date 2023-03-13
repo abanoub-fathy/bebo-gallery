@@ -47,20 +47,19 @@ func main() {
 	r.NotFoundHandler = staticController.NotFound
 
 	// create new user controller
-	userController := controllers.NewUser(service.UserService)
+	userController := controllers.NewUser(service.UserService, r)
 
 	// user routes
 	r.Handle("/signup", userController.SignUpView).Methods("GET")
 	r.HandleFunc("/new", userController.CreateNewUser).Methods("POST")
 	r.Handle("/login", userController.LogInView).Methods("GET")
 	r.HandleFunc("/login", userController.Login).Methods("POST")
-	r.HandleFunc("/cookie", userController.CookieTest).Methods("GET")
 
 	// create gallery controllers
 	galleryController := controllers.NewGallery(service.GalleryService, r)
 
 	// gallery routes
-	r.Handle("/galleries/new", requireUserMiddleWare.Apply(galleryController.CreateGalleryView)).Methods("GET")
+	r.Handle("/galleries/new", requireUserMiddleWare.Apply(galleryController.CreateGalleryView)).Methods("GET").Name(controllers.ViewCreateGalleryEndpoint)
 	r.HandleFunc("/galleries/{galleryID}", galleryController.ViewGallery).Methods("GET").Name(controllers.ViewGalleryEndpoint)
 	r.HandleFunc("/galleries", requireUserMiddleWare.ApplyFunc(galleryController.CreateNewGallery)).Methods("POST")
 	r.HandleFunc("/galleries", requireUserMiddleWare.ApplyFunc(galleryController.ShowUserGalleriesPage)).Methods("GET").Name(controllers.ViewGalleriesEndpoint)
