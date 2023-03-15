@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/abanoub-fathy/bebo-gallery/pkg/context"
@@ -16,6 +18,10 @@ const (
 	ViewGalleryEndpoint       = "view_gallery_endpoint"
 	ViewGalleriesEndpoint     = "view_galleries_endpoint"
 	ViewCreateGalleryEndpoint = "view_create_gallery_end_point"
+)
+
+const (
+	PARSE_FORM_MAX_MEMORY = 30 << 20
 )
 
 type Gallery struct {
@@ -176,6 +182,84 @@ func (g *Gallery) EditGallery(w http.ResponseWriter, r *http.Request) {
 		},
 		Data: gallery,
 	})
+}
+
+func (g *Gallery) UploadImage(w http.ResponseWriter, r *http.Request) {
+	// get gallery id variable
+	galleryID := mux.Vars(r)["galleryID"]
+
+	// fetch gallery by id
+	gallery, err := g.GalleryService.FindByID(galleryID)
+	if err != nil {
+		// redirect user to not found
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// get user from conext
+	user := context.UserValue(r.Context())
+
+	// check that the user own the gallery
+	if !uuid.Equal(user.ID, gallery.UserID) {
+		// redirect user to not found
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// define view params data
+	params := views.Params{
+		Data: gallery,
+	}
+
+	// parse multipart gallery
+	if err = r.ParseMultipartForm(PARSE_FORM_MAX_MEMORY); err != nil {
+		params.SetAlert(err)
+		g.EditGalleryView.Render(w, r, params)
+		return
+	}
+
+	fileHeaders := r.MultipartForm.File["images"]
+
+	// create image path
+	imagePath := fmt.Sprintf("images/galleries/%v/", gallery.ID)
+
+	// create the director
+	if err = os.MkdirAll(imagePath, 0755); err != nil {
+		params.SetAlert(err)
+		g.EditGalleryView.Render(w, r, params)
+		return
+	}
+
+	for _, f := range fileHeaders {
+		// open the file
+		file, err := f.Open()
+		if err != nil {
+			params.SetAlert(err)
+			g.EditGalleryView.Render(w, r, params)
+			return
+		}
+		defer file.Close()
+
+		// create destination file
+		destinationFile, err := os.Create(imagePath + f.Filename)
+		if err != nil {
+			params.SetAlert(err)
+			g.EditGalleryView.Render(w, r, params)
+			return
+		}
+		defer destinationFile.Close()
+
+		// copy the uploaded file to destination file
+		_, err = io.Copy(destinationFile, file)
+		if err != nil {
+			params.SetAlert(err)
+			g.EditGalleryView.Render(w, r, params)
+			return
+		}
+	}
+
+	fmt.Fprintln(w, "uploaded done...")
+
 }
 
 type createGalleryForm struct {
