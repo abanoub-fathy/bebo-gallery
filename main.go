@@ -35,6 +35,10 @@ func main() {
 		Service: service,
 	}
 
+	userMiddleWare := middlewares.UserMiddleware{
+		Service: service,
+	}
+
 	// set router
 	r := mux.NewRouter()
 
@@ -69,5 +73,5 @@ func main() {
 
 	// start the app
 	fmt.Println("🚀🚀 Server is working on http://localhost:3000")
-	utils.Must(http.ListenAndServe(":3000", r))
+	utils.Must(http.ListenAndServe(":3000", userMiddleWare.UserInCtxApply(r)))
 }

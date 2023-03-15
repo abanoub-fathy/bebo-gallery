@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/abanoub-fathy/bebo-gallery/pkg/context"
 )
 
 // View type is a struct contain the template of the view
@@ -72,6 +74,9 @@ func (view *View) Render(w http.ResponseWriter, r *http.Request, params Params) 
 
 	// create a buffer to execute template into first
 	buffer := bytes.Buffer{}
+
+	// set the context user to params
+	params.User = context.UserValue(r.Context())
 
 	// execute template into the buffer
 	if err := view.Template.ExecuteTemplate(&buffer, view.Layout, params); err != nil {

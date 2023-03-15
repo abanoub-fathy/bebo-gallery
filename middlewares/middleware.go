@@ -48,3 +48,38 @@ func (mw *RequireUser) ApplyFunc(next http.HandlerFunc) http.HandlerFunc {
 func (mw *RequireUser) Apply(next http.Handler) http.Handler {
 	return mw.ApplyFunc(next.ServeHTTP)
 }
+
+type UserMiddleware struct {
+	Service *model.Service
+}
+
+func (userMW *UserMiddleware) UserInCtxApply(next http.Handler) http.Handler {
+	return userMW.UserInCtxApplyFn(next.ServeHTTP)
+}
+
+func (userMW *UserMiddleware) UserInCtxApplyFn(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// get the user token
+		token, err := r.Cookie("token")
+		if err != nil {
+			next(w, r)
+			return
+		}
+
+		// get the user from token
+		user, err := userMW.Service.UserService.FindUserByRememberToken(token.Value)
+		if err != nil {
+			next(w, r)
+			return
+		}
+
+		// create context with user
+		ctx := context.WithUser(r.Context(), user)
+
+		// set the new ctx to request
+		r = r.WithContext(ctx)
+
+		// call the next handler func
+		next(w, r)
+	}
+}

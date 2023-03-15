@@ -1,5 +1,7 @@
 package views
 
+import "github.com/abanoub-fathy/bebo-gallery/model"
+
 // Alert represents the alert that shown inside temaplets
 type Alert struct {
 	Level   string
@@ -31,7 +33,7 @@ const (
 type Params struct {
 	Alert *Alert
 	Data  interface{}
-	User  interface{}
+	User  *model.User
 }
 
 // SetAlert is used to set alert in the the params

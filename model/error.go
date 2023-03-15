@@ -3,7 +3,6 @@ package model
 import (
 	"strings"
 
-	"github.com/abanoub-fathy/bebo-gallery/views"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -11,10 +10,6 @@ import (
 // public Error is the type that
 // implements the PublicError interface
 type publicError string
-
-// make sure that public error will implement the
-// PublicError interface
-var _ views.PublicError = (*publicError)(nil)
 
 const (
 	// ErrNotFound is returned when the resource can not be found from DB
