@@ -2,9 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"io"
 	"net/http"
-	"os"
 
 	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/abanoub-fathy/bebo-gallery/pkg/context"
@@ -30,18 +28,20 @@ type Gallery struct {
 	CreateGalleryView     *views.View
 	EditGalleryView       *views.View
 	GalleryService        model.GalleryService
+	ImageService          model.ImageService
 	router                *mux.Router
 }
 
 // NewGallery return a pointer to Gallery type which can be used
 // as a receiver to call the handler functions
-func NewGallery(galleryService model.GalleryService, muxRouter *mux.Router) *Gallery {
+func NewGallery(galleryService model.GalleryService, imageService model.ImageService, muxRouter *mux.Router) *Gallery {
 	return &Gallery{
 		ShowGalleryView:       views.NewView("base", "gallery/gallery"),
 		ShowUserGalleriesView: views.NewView("base", "gallery/user_galleries"),
 		CreateGalleryView:     views.NewView("base", "gallery/new"),
 		EditGalleryView:       views.NewView("base", "gallery/edit"),
 		GalleryService:        galleryService,
+		ImageService:          imageService,
 		router:                muxRouter,
 	}
 }
@@ -220,16 +220,6 @@ func (g *Gallery) UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	fileHeaders := r.MultipartForm.File["images"]
 
-	// create image path
-	imagePath := fmt.Sprintf("images/galleries/%v/", gallery.ID)
-
-	// create the director
-	if err = os.MkdirAll(imagePath, 0755); err != nil {
-		params.SetAlert(err)
-		g.EditGalleryView.Render(w, r, params)
-		return
-	}
-
 	for _, f := range fileHeaders {
 		// open the file
 		file, err := f.Open()
@@ -240,17 +230,7 @@ func (g *Gallery) UploadImage(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
-		// create destination file
-		destinationFile, err := os.Create(imagePath + f.Filename)
-		if err != nil {
-			params.SetAlert(err)
-			g.EditGalleryView.Render(w, r, params)
-			return
-		}
-		defer destinationFile.Close()
-
-		// copy the uploaded file to destination file
-		_, err = io.Copy(destinationFile, file)
+		err = g.ImageService.CreateImage(file, gallery.ID, f.Filename)
 		if err != nil {
 			params.SetAlert(err)
 			g.EditGalleryView.Render(w, r, params)
@@ -259,7 +239,6 @@ func (g *Gallery) UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintln(w, "uploaded done...")
-
 }
 
 type createGalleryForm struct {

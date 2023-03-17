@@ -11,6 +11,7 @@ type Service struct {
 	db *gorm.DB
 	GalleryService
 	UserService
+	ImageService
 }
 
 // NewService is used to create service struct
@@ -27,6 +28,7 @@ func NewService(DB_URI string) (*Service, error) {
 		db:             db,
 		GalleryService: NewGalleryService(db),
 		UserService:    NewUserService(db),
+		ImageService:   NewImageService(),
 	}
 
 	return service, nil

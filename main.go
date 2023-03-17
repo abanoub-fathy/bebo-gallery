@@ -60,7 +60,7 @@ func main() {
 	r.HandleFunc("/login", userController.Login).Methods("POST")
 
 	// create gallery controllers
-	galleryController := controllers.NewGallery(service.GalleryService, r)
+	galleryController := controllers.NewGallery(service.GalleryService, service.ImageService, r)
 
 	// gallery routes
 	r.Handle("/galleries/new", requireUserMiddleWare.Apply(galleryController.CreateGalleryView)).Methods("GET").Name(controllers.ViewCreateGalleryEndpoint)
