@@ -16,6 +16,7 @@ const (
 	ViewGalleryEndpoint       = "view_gallery_endpoint"
 	ViewGalleriesEndpoint     = "view_galleries_endpoint"
 	ViewCreateGalleryEndpoint = "view_create_gallery_end_point"
+	EditGalleryPageEndpoint   = "edit_gallery_page_end_point"
 )
 
 const (
@@ -57,6 +58,9 @@ func (g *Gallery) ViewGallery(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
 		return
 	}
+
+	// fetch gallery images
+	gallery.Images, _ = g.ImageService.GetImagesByGalleryID(gallery.ID)
 
 	// render the gallery
 	err = g.ShowGalleryView.Render(w, r, views.Params{
@@ -110,6 +114,9 @@ func (g *Gallery) EditGalleryPage(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
 		return
 	}
+
+	// fetch gallery images
+	gallery.Images, _ = g.ImageService.GetImagesByGalleryID(gallery.ID)
 
 	// render the gallery
 	err = g.EditGalleryView.Render(w, r, views.Params{
@@ -238,7 +245,13 @@ func (g *Gallery) UploadImage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Fprintln(w, "uploaded done...")
+	// redirect user to show gallery page
+	url, err := g.router.GetRoute(EditGalleryPageEndpoint).URL("galleryID", gallery.ID.String())
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, url.String(), http.StatusFound)
 }
 
 type createGalleryForm struct {

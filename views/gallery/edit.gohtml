@@ -34,7 +34,13 @@
   <div class="form-group row mb-2">
     <label for="title" class="col-md-1 col-form-label">Images</label>
     <div class="col-md-10">
-      <p class="form-control-plaintext">Coming Soon</p>
+      <div>
+        {{range .Images}}
+          <div>
+            {{.}}
+          </div>
+        {{end}}
+      </div>
     </div>
   </div>
 </form>
