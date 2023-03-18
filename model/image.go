@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	uuid "github.com/satori/go.uuid"
 )
 
 type ImageService interface {
 	CreateImage(reader io.ReadCloser, galleryID uuid.UUID, fileName string) error
+	GetImagesByGalleryID(galleryID uuid.UUID) ([]string, error)
 }
 
 type imageService struct{}
@@ -25,7 +27,7 @@ func (is *imageService) CreateImage(reader io.ReadCloser, galleryID uuid.UUID, f
 	defer reader.Close()
 
 	// create image dir path
-	imagePath, err := createImageDirPath(galleryID.String())
+	imagePath, err := is.createImageDirPath(galleryID.String())
 	if err != nil {
 		return err
 	}
@@ -46,8 +48,21 @@ func (is *imageService) CreateImage(reader io.ReadCloser, galleryID uuid.UUID, f
 	return nil
 }
 
-func createImageDirPath(galleryID string) (string, error) {
-	imageDirPath := fmt.Sprintf("images/galleries/%v/", galleryID)
+func (is *imageService) GetImagesByGalleryID(galleryID uuid.UUID) ([]string, error) {
+	imagesDirPath := is.imagesPath(galleryID.String())
+	fileNames, err := filepath.Glob(imagesDirPath + "*")
+	if err != nil {
+		return nil, err
+	}
+	return fileNames, nil
+}
+
+func (is *imageService) imagesPath(galleryID string) string {
+	return fmt.Sprintf("images/galleries/%v/", galleryID)
+}
+
+func (is *imageService) createImageDirPath(galleryID string) (string, error) {
+	imageDirPath := is.imagesPath(galleryID)
 	err := os.MkdirAll(imageDirPath, 0755)
 	if err != nil {
 		return "", err
