@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -53,6 +54,10 @@ func (is *imageService) GetImagesByGalleryID(galleryID uuid.UUID) ([]string, err
 	fileNames, err := filepath.Glob(imagesDirPath + "*")
 	if err != nil {
 		return nil, err
+	}
+	for i := range fileNames {
+		// replace the "\" char and add the "/" to each fileName
+		fileNames[i] = "/" + strings.ReplaceAll(fileNames[i], "\\", "/")
 	}
 	return fileNames, nil
 }

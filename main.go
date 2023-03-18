@@ -42,6 +42,10 @@ func main() {
 	// set router
 	r := mux.NewRouter()
 
+	// file server
+	fileServerHandler := http.FileServer(http.Dir("./images"))
+	r.PathPrefix("/images/").Handler(http.StripPrefix("/images/", fileServerHandler))
+
 	// create StaticController
 	staticController := controllers.NewStatic()
 
