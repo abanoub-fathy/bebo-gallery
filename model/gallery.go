@@ -20,7 +20,7 @@ type Gallery struct {
 	Base
 	Title  string    `gorm:"not_null"`
 	UserID uuid.UUID `gorm:"not_null;index"`
-	Images []string  `gorm:"-"`
+	Images []Image   `gorm:"-"`
 }
 
 // galleryValidationFunc is a type for gallery validation

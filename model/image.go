@@ -10,9 +10,19 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+type Image struct {
+	GalleryID string
+	FileName  string
+}
+
+// Path method is used to return the full path to the image
+func (i *Image) Path() string {
+	return fmt.Sprintf("/images/galleries/%v/%v", i.GalleryID, i.FileName)
+}
+
 type ImageService interface {
 	CreateImage(reader io.ReadCloser, galleryID uuid.UUID, fileName string) error
-	GetImagesByGalleryID(galleryID uuid.UUID) ([]string, error)
+	GetImagesByGalleryID(galleryID uuid.UUID) ([]Image, error)
 }
 
 type imageService struct{}
@@ -49,17 +59,21 @@ func (is *imageService) CreateImage(reader io.ReadCloser, galleryID uuid.UUID, f
 	return nil
 }
 
-func (is *imageService) GetImagesByGalleryID(galleryID uuid.UUID) ([]string, error) {
+func (is *imageService) GetImagesByGalleryID(galleryID uuid.UUID) ([]Image, error) {
 	imagesDirPath := is.imagesPath(galleryID.String())
 	fileNames, err := filepath.Glob(imagesDirPath + "*")
 	if err != nil {
 		return nil, err
 	}
+	images := make([]Image, len(fileNames))
 	for i := range fileNames {
-		// replace the "\" char and add the "/" to each fileName
-		fileNames[i] = "/" + strings.ReplaceAll(fileNames[i], "\\", "/")
+		fileNames[i] = strings.ReplaceAll(fileNames[i], "\\", "/")
+		images[i] = Image{
+			GalleryID: galleryID.String(),
+			FileName:  strings.ReplaceAll(fileNames[i], is.imagesPath(galleryID.String()), ""),
+		}
 	}
-	return fileNames, nil
+	return images, nil
 }
 
 func (is *imageService) imagesPath(galleryID string) string {
