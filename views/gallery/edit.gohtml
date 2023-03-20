@@ -35,13 +35,15 @@
     <label for="title" class="col-md-1 col-form-label">Images</label>
     <div class="col-md-10">
       <div class="row">
-        {{range .Images}}
+        {{range .ImageSplit 6}}
             <div class="col-md-2">
-              <div class="img-thumbnail">
-                <a href="{{.Path}}" target="_blank">
-                  <img src="{{.Path}}" alt="image" style="width:100%">
-                </a>
-              </div>
+              {{range .}}
+                <div class="img-thumbnail">
+                  <a href="{{.Path}}" target="_blank">
+                    <img src="{{.Path}}" alt="image" style="width:100%">
+                  </a>
+                </div>
+              {{end}}
             </div>
         {{end}}
       </div>

@@ -4,13 +4,15 @@
       <h1>{{ .Data.Title }}</h1>
 
       <div class="row">
-        {{range .Data.Images}}
+        {{range .Data.ImageSplit 3}}
             <div class="col-md-4">
+            {{range .}}
               <div class="img-thumbnail">
                 <a href="{{.Path}}" target="_blank">
                   <img src="{{.Path}}" alt="image" style="width:100%">
                 </a>
               </div>
+            {{end}}
             </div>
         {{end}}
       </div>

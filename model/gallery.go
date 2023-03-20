@@ -23,6 +23,29 @@ type Gallery struct {
 	Images []Image   `gorm:"-"`
 }
 
+// ImageSplit is gallery method used to return gallery images
+// in [][]Image format it can be used inside the html templates
+// to divide the images on columns instead of making rows
+//
+// we can use only one row with n columns and in each column we
+// will have slice of images.
+//
+// the big adventage of taking this approach is now we will not have
+// gap between rows when there is a very tall image in specific row
+func (gallery *Gallery) ImageSplit(n int) [][]Image {
+	imagesCols := make([][]Image, n)
+	for i := 0; i < n; i++ {
+		imagesCols[i] = []Image{}
+	}
+
+	for i := 0; i < len(gallery.Images); i++ {
+		colNumber := i % n
+		imagesCols[colNumber] = append(imagesCols[colNumber], gallery.Images[i])
+	}
+
+	return imagesCols
+}
+
 // galleryValidationFunc is a type for gallery validation
 // functions.
 //
