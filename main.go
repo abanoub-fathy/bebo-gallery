@@ -42,6 +42,10 @@ func main() {
 	// set router
 	r := mux.NewRouter()
 
+	// serve static assets
+	assetsServerHandler := http.FileServer(http.Dir("./views/assets/"))
+	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", assetsServerHandler))
+
 	// file server
 	fileServerHandler := http.FileServer(http.Dir("./images"))
 	r.PathPrefix("/images/").Handler(http.StripPrefix("/images/", fileServerHandler))
