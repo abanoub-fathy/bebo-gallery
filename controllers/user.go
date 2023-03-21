@@ -48,13 +48,7 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the form
 	if err := utils.ParseForm(r, &form); err != nil {
-		// set the alert
 		params.SetAlert(err)
-
-		// log the error
-		log.Println(err)
-
-		// render signup view with params
 		u.SignUpView.Render(w, r, params)
 		return
 	}
@@ -68,13 +62,8 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.UserService.CreateUser(user); err != nil {
-		// set alert to be displayed
 		params.SetAlert(err)
-
-		// log the error
 		log.Println(err)
-
-		// render signup view with params
 		u.SignUpView.Render(w, r, params)
 		return
 	}
@@ -83,8 +72,9 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	setRemeberTokenToCookie(w, user)
 
 	// redirect  user to create galleries page
-	url, err := u.router.GetRoute(ViewCreateGalleryEndpoint).URL()
+	url, err := u.router.Get(ViewCreateGalleryEndpoint).URL()
 	if err != nil {
+		log.Println(err)
 		http.Redirect(w, r, "/", http.StatusInternalServerError)
 		return
 	}
@@ -140,8 +130,9 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	setRemeberTokenToCookie(w, user)
 
 	// redirect to galleries page
-	url, err := u.router.GetRoute(ViewGalleriesEndpoint).URL()
+	url, err := u.router.Get(ViewGalleriesEndpoint).URL()
 	if err != nil {
+		log.Println(err)
 		http.Redirect(w, r, "/", http.StatusInternalServerError)
 		return
 	}

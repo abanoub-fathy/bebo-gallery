@@ -157,10 +157,7 @@ func (g *Gallery) EditGallery(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the form
 	if err := utils.ParseForm(r, &form); err != nil {
-		// set the alert
 		params.SetAlert(err)
-
-		// render the create gallery view with params
 		g.EditGalleryView.Render(w, r, params)
 		return
 	}
@@ -170,25 +167,19 @@ func (g *Gallery) EditGallery(w http.ResponseWriter, r *http.Request) {
 
 	err = g.GalleryService.Update(gallery)
 	if err != nil {
-		// set the alert
 		params.SetAlert(err)
-
-		// set the gallery to the data
 		params.Data = gallery
-
-		// render the create gallery view with params
 		g.EditGalleryView.Render(w, r, params)
 		return
 	}
 
-	// show gallery view with alert
-	g.EditGalleryView.Render(w, r, views.Params{
-		Alert: &views.Alert{
-			Level:   views.AlertLevelSuccess,
-			Message: "Gallery is updated successfully!",
-		},
-		Data: gallery,
-	})
+	// redirect user to show gallery page
+	url, err := g.router.Get(ViewGalleryEndpoint).URL("galleryID", gallery.ID.String())
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, url.String(), http.StatusFound)
 }
 
 func (g *Gallery) UploadImage(w http.ResponseWriter, r *http.Request) {
@@ -246,7 +237,7 @@ func (g *Gallery) UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// redirect user to show gallery page
-	url, err := g.router.GetRoute(EditGalleryPageEndpoint).URL("galleryID", gallery.ID.String())
+	url, err := g.router.Get(EditGalleryPageEndpoint).URL("galleryID", gallery.ID.String())
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusInternalServerError)
 		return
@@ -296,7 +287,7 @@ func (g *Gallery) DeleteImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// redirect user to show gallery page
-	url, err := g.router.GetRoute(EditGalleryPageEndpoint).URL("galleryID", gallery.ID.String())
+	url, err := g.router.Get(EditGalleryPageEndpoint).URL("galleryID", gallery.ID.String())
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusInternalServerError)
 		return
@@ -340,7 +331,7 @@ func (g *Gallery) CreateNewGallery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url, err := g.router.GetRoute(ViewGalleriesEndpoint).URL()
+	url, err := g.router.Get(ViewGalleriesEndpoint).URL()
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusInternalServerError)
 		return
@@ -381,17 +372,14 @@ func (g *Gallery) DeleteGallery(w http.ResponseWriter, r *http.Request) {
 
 	// delete gallery
 	if err := g.GalleryService.Delete(gallery); err != nil {
-		// set alert and gallery
 		params.SetAlert(err)
 		params.Data = gallery
-
-		// redirect to edit page
 		g.EditGalleryView.Render(w, r, params)
 		return
 	}
 
 	// return the gallery
-	url, err := g.router.GetRoute(ViewGalleriesEndpoint).URL()
+	url, err := g.router.Get(ViewGalleriesEndpoint).URL()
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusInternalServerError)
 		return
