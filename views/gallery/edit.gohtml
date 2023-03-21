@@ -6,6 +6,7 @@
 
 <div class="row mb-5">
   {{template "editGalleryForm" .Data}}
+  {{template "images" .Data}}
 </div>
 
 <div class="row mb-5">
@@ -20,7 +21,7 @@
 {{end}}
 
 {{define "editGalleryForm"}}
-<form method="POST" action="/galleries/{{.ID}}/edit" method="POST">
+<form method="POST" action="/galleries/{{.ID}}/edit">
   <div class="form-group row mb-2">
     <label for="title" class="col-md-1 col-form-label">Title</label>
     <div class="col-md-10">
@@ -30,30 +31,33 @@
       <button type="submit" class="btn btn-primary">Update</button>
     </div>
   </div>
-
-  <div class="form-group row mb-2">
-    <label for="title" class="col-md-1 col-form-label">Images</label>
-    <div class="col-md-10">
-      <div class="row">
-        {{range .ImageSplit 6}}
-            <div class="col-md-2">
-              {{range .}}
-                <div class="img-thumbnail">
-                  <a href="{{.Path}}" target="_blank">
-                    <img src="{{.Path}}" alt="image" style="width:100%">
-                  </a>
-                </div>
-              {{end}}
-            </div>
-        {{end}}
-      </div>
-    </div>
-  </div>
 </form>
 {{end}}
 
+{{define "images"}}
+<div class="form-group row mb-2">
+  <label for="title" class="col-md-1 col-form-label">Images</label>
+  <div class="col-md-10">
+    <div class="row">
+      {{range .ImageSplit 6}}
+          <div class="col-md-2">
+            {{range .}}
+              <div class="img-thumbnail">
+                <a href="{{.Path}}" target="_blank">
+                  <img src="{{.Path}}" alt="image" style="width:100%">
+                </a>
+                {{template "deleteImageForm" .}}
+              </div>
+            {{end}}
+          </div>
+      {{end}}
+    </div>
+  </div>
+</div>
+{{end}}
+
 {{define "uploadImagesForm"}}
-<form method="POST" action="/galleries/{{.ID}}/images" method="POST" enctype="multipart/form-data" >
+<form method="POST" action="/galleries/{{.ID}}/images" enctype="multipart/form-data" >
   <div class="form-group row mb-2">
     <label for="title" class="col-md-1 col-form-label">Choose Image</label>
     <div class="col-md-2">
@@ -69,7 +73,13 @@
 {{end}}
 
 {{define "deleteGalleryForm"}}
-<form method="POST" action="/galleries/{{.ID}}/delete" method="POST">
+<form method="POST" action="/galleries/{{.ID}}/delete">
   <button type="submit" class="btn btn-danger">Delete</button>
+</form>
+{{end}}
+
+{{define "deleteImageForm"}}
+<form method="POST" action="/galleries/{{.GalleryID}}/images/{{.FileName}}/delete">
+  <button type="submit" class="btn btn-link">Delete</button>
 </form>
 {{end}}

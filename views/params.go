@@ -1,6 +1,10 @@
 package views
 
-import "github.com/abanoub-fathy/bebo-gallery/model"
+import (
+	"log"
+
+	"github.com/abanoub-fathy/bebo-gallery/model"
+)
 
 // Alert represents the alert that shown inside temaplets
 type Alert struct {
@@ -47,6 +51,7 @@ func (p *Params) SetAlert(err error) {
 		// if the error is public error
 		p.Alert = NewAlert(AlertLevelError, pErr.PublicErrMsg())
 	} else {
+		log.Println(err)
 		p.Alert = NewAlert(AlertLevelError, ErrMsgGeneric)
 	}
 }

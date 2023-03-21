@@ -17,12 +17,17 @@ type Image struct {
 
 // Path method is used to return the full path to the image
 func (i *Image) Path() string {
-	return fmt.Sprintf("/images/galleries/%v/%v", i.GalleryID, i.FileName)
+	return "/" + i.RelativePath()
+}
+
+func (i *Image) RelativePath() string {
+	return fmt.Sprintf("images/galleries/%v/%v", i.GalleryID, i.FileName)
 }
 
 type ImageService interface {
 	CreateImage(reader io.ReadCloser, galleryID uuid.UUID, fileName string) error
 	GetImagesByGalleryID(galleryID uuid.UUID) ([]Image, error)
+	DeleteImage(image *Image) error
 }
 
 type imageService struct{}
@@ -74,6 +79,10 @@ func (is *imageService) GetImagesByGalleryID(galleryID uuid.UUID) ([]Image, erro
 		}
 	}
 	return images, nil
+}
+
+func (is *imageService) DeleteImage(image *Image) error {
+	return os.Remove(image.RelativePath())
 }
 
 func (is *imageService) imagesPath(galleryID string) string {

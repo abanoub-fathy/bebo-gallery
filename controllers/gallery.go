@@ -254,6 +254,56 @@ func (g *Gallery) UploadImage(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url.String(), http.StatusFound)
 }
 
+func (g *Gallery) DeleteImage(w http.ResponseWriter, r *http.Request) {
+	// get gallery id variable
+	galleryID := mux.Vars(r)["galleryID"]
+
+	// fetch gallery by id
+	gallery, err := g.GalleryService.FindByID(galleryID)
+	if err != nil {
+		// redirect user to not found
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// get user from conext
+	user := context.UserValue(r.Context())
+
+	// check that the user own the gallery
+	if !uuid.Equal(user.ID, gallery.UserID) {
+		// redirect user to not found
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// get fileName
+	fileName := mux.Vars(r)["fileName"]
+
+	// define image
+	image := model.Image{
+		GalleryID: galleryID,
+		FileName:  fileName,
+	}
+
+	// delete the image
+	if err = g.ImageService.DeleteImage(&image); err != nil {
+		params := views.Params{
+			Data: gallery,
+		}
+		params.SetAlert(err)
+		g.EditGalleryView.Render(w, r, params)
+		return
+	}
+
+	// redirect user to show gallery page
+	url, err := g.router.GetRoute(EditGalleryPageEndpoint).URL("galleryID", gallery.ID.String())
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, url.String(), http.StatusFound)
+}
+
 type createGalleryForm struct {
 	Title string `schema:"title"`
 }
