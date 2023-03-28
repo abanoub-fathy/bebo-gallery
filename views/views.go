@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/abanoub-fathy/bebo-gallery/pkg/context"
 	"github.com/gorilla/csrf"
@@ -41,6 +42,10 @@ func NewView(layout string, files ...string) *View {
 	funcMap := template.FuncMap{
 		csrf.TemplateTag: func() error {
 			return errors.New("csrf field not implemented")
+		},
+		"formatDate": func(t time.Time) string {
+			const layout = "Monday, January 2, 2006 3:04 PM"
+			return t.In(time.Local).Format(layout)
 		},
 	}
 

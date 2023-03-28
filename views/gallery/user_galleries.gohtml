@@ -14,7 +14,7 @@
         {{range $i, $gallery := .Data}}
           <tr>
             <td>{{$gallery.Title}}</td>
-            <th scope="row">{{$gallery.CreatedAt}}</th>
+            <th scope="row">{{formatDate $gallery.CreatedAt}}</th>
             <td><a class="btn btn-secondary" href="/galleries/{{$gallery.ID}}">View</a></td>
             <td><a class="btn btn-secondary" href="/galleries/{{$gallery.ID}}/edit">Edit</a></td>
           </tr>
