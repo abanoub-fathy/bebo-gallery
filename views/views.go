@@ -2,12 +2,14 @@ package views
 
 import (
 	"bytes"
+	"errors"
 	"html/template"
 	"log"
 	"net/http"
 	"path/filepath"
 
 	"github.com/abanoub-fathy/bebo-gallery/pkg/context"
+	"github.com/gorilla/csrf"
 )
 
 // View type is a struct contain the template of the view
@@ -35,8 +37,15 @@ func NewView(layout string, files ...string) *View {
 	// apend fileName wihh layout files
 	files = append(files, getLayoutFiles()...)
 
+	// create template func map
+	funcMap := template.FuncMap{
+		csrf.TemplateTag: func() error {
+			return errors.New("csrf field not implemented")
+		},
+	}
+
 	// parse template file with layout files
-	t, err := template.ParseFiles(files...)
+	t, err := template.New("").Funcs(funcMap).ParseFiles(files...)
 	if err != nil {
 		panic(err)
 	}
@@ -78,8 +87,15 @@ func (view *View) Render(w http.ResponseWriter, r *http.Request, params Params) 
 	// set the context user to params
 	params.User = context.UserValue(r.Context())
 
+	// add CSRFField method to the template
+	templateFuncMap := template.FuncMap{
+		csrf.TemplateTag: func() template.HTML {
+			return csrf.TemplateField(r)
+		},
+	}
+
 	// execute template into the buffer
-	if err := view.Template.ExecuteTemplate(&buffer, view.Layout, params); err != nil {
+	if err := view.Template.Funcs(templateFuncMap).ExecuteTemplate(&buffer, view.Layout, params); err != nil {
 		http.Error(w, "something went wrong from our side. if the problem presists please contact support", http.StatusInternalServerError)
 		return err
 	}

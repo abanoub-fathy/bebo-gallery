@@ -14,6 +14,9 @@ func ParseForm(r *http.Request, data interface{}) error {
 		return err
 	}
 
+	// ignore unknown keys
+	decoder.IgnoreUnknownKeys(true)
+
 	err = decoder.Decode(data, r.PostForm)
 	if err != nil {
 		return err

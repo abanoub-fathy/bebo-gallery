@@ -9,6 +9,7 @@ import (
 	"github.com/abanoub-fathy/bebo-gallery/middlewares"
 	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/abanoub-fathy/bebo-gallery/utils"
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -81,7 +82,11 @@ func main() {
 	r.HandleFunc("/galleries/{galleryID}/images/{fileName}/delete", requireUserMiddleWare.ApplyFunc(galleryController.DeleteImage)).Methods("POST")
 	r.HandleFunc("/galleries/{galleryID}/delete", requireUserMiddleWare.ApplyFunc(galleryController.DeleteGallery)).Methods("POST")
 
+	// CSRF Protection
+	isProd := false
+	CSRF := csrf.Protect([]byte(os.Getenv("CSRF_KEY")), csrf.Secure(isProd))
+
 	// start the app
 	fmt.Println("🚀🚀 Server is working on http://localhost:3000")
-	utils.Must(http.ListenAndServe(":3000", userMiddleWare.UserInCtxApply(r)))
+	utils.Must(http.ListenAndServe(":3000", CSRF(userMiddleWare.UserInCtxApply(r))))
 }

@@ -14,6 +14,7 @@
 
 {{define "galleryForm"}}
 <form method="POST" action="/galleries">
+  {{ csrfField }}
   <div class="mb-3">
     <label for="title" class="form-label">Title</label>
     <input type="text" class="form-control" id="title" name="title" placeholder="What is the name of the gallery?">
