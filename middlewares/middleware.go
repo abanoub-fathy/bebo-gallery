@@ -3,6 +3,7 @@ package middlewares
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/abanoub-fathy/bebo-gallery/pkg/context"
 
@@ -59,6 +60,15 @@ func (userMW *UserMiddleware) UserInCtxApply(next http.Handler) http.Handler {
 
 func (userMW *UserMiddleware) UserInCtxApplyFn(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// if the path for getting public assets
+		// we don't need to set user in ctx so we will
+		// call next and return
+		path := r.URL.Path
+		if strings.HasPrefix(path, "/images/") || strings.HasPrefix(path, "/assets/") {
+			next(w, r)
+			return
+		}
+
 		// get the user token
 		token, err := r.Cookie("token")
 		if err != nil {
