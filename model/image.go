@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,7 +18,10 @@ type Image struct {
 
 // Path method is used to return the full path to the image
 func (i *Image) Path() string {
-	return "/" + i.RelativePath()
+	urlPath := url.URL{
+		Path: "/" + i.RelativePath(),
+	}
+	return urlPath.String()
 }
 
 func (i *Image) RelativePath() string {
