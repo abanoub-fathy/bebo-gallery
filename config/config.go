@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/joho/godotenv"
 )
 
@@ -24,7 +23,7 @@ type Configurations struct {
 var AppConfig Configurations
 
 func init() {
-	utils.Must(loadEnvFile())
+	loadEnvFile()
 	configs, err := newConfigurations()
 	if err != nil {
 		panic(err)
