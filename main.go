@@ -3,26 +3,20 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
 
+	"github.com/abanoub-fathy/bebo-gallery/config"
 	"github.com/abanoub-fathy/bebo-gallery/controllers"
 	"github.com/abanoub-fathy/bebo-gallery/middlewares"
 	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	// load env file
-	utils.Must(godotenv.Load())
-
-	// Database URI
-	var DB_URI = os.Getenv("DATABASE_URI")
 
 	// create new service
-	service, err := model.NewService(DB_URI)
+	service, err := model.NewService(config.AppConfig.DatabaseURI)
 	utils.Must(err)
 
 	// defer closing the services
@@ -83,10 +77,9 @@ func main() {
 	r.HandleFunc("/galleries/{galleryID}/delete", requireUserMiddleWare.ApplyFunc(galleryController.DeleteGallery)).Methods("POST")
 
 	// CSRF Protection
-	isProd := false
-	CSRF := csrf.Protect([]byte(os.Getenv("CSRF_KEY")), csrf.Secure(isProd))
+	CSRF := csrf.Protect([]byte(config.AppConfig.CSRFKey), csrf.Secure(config.AppConfig.IsProductionEnv))
 
 	// start the app
-	fmt.Println("🚀🚀 Server is working on http://localhost:3000")
-	utils.Must(http.ListenAndServe(":3000", CSRF(userMiddleWare.UserInCtxApply(r))))
+	fmt.Printf("🚀🚀 Server is working on http://localhost:%v\n", config.AppConfig.Port)
+	utils.Must(http.ListenAndServe(fmt.Sprintf(":%v", config.AppConfig.Port), CSRF(userMiddleWare.UserInCtxApply(r))))
 }

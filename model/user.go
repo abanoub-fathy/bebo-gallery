@@ -2,10 +2,10 @@ package model
 
 import (
 	"errors"
-	"os"
 	"regexp"
 	"strings"
 
+	"github.com/abanoub-fathy/bebo-gallery/config"
 	"github.com/abanoub-fathy/bebo-gallery/pkg/hash"
 	"github.com/abanoub-fathy/bebo-gallery/pkg/rand"
 	uuid "github.com/satori/go.uuid"
@@ -66,7 +66,7 @@ func newUserGorm(db *gorm.DB) *userGorm {
 	// return userGorm object
 	return &userGorm{
 		db:     db,
-		hasher: hash.NewHasher(os.Getenv("HASH_SECRET_KEY")),
+		hasher: hash.NewHasher(config.AppConfig.HashSecretKey),
 	}
 }
 
@@ -101,7 +101,7 @@ func NewUserService(db *gorm.DB) UserService {
 	userGorm := newUserGorm(db)
 
 	// create userValidator
-	userValidator := newUserValidator(userGorm, hash.NewHasher(os.Getenv("HASH_SECRET_KEY")))
+	userValidator := newUserValidator(userGorm, hash.NewHasher(config.AppConfig.HashSecretKey))
 
 	// set the userGorm to UserDB in the UserService
 	userService := &userService{
