@@ -3,12 +3,16 @@ package controllers
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/abanoub-fathy/bebo-gallery/model"
+	"github.com/abanoub-fathy/bebo-gallery/pkg/context"
 	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/abanoub-fathy/bebo-gallery/views"
 	"github.com/gorilla/mux"
 )
+
+const DEFAULT_TOKEN_VALID_DURATION = time.Hour * 120
 
 type User struct {
 	SignUpView  *views.View
@@ -69,7 +73,7 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// set remember token
-	setRemeberTokenToCookie(w, user)
+	setRemeberTokenToCookie(w, user, DEFAULT_TOKEN_VALID_DURATION)
 
 	// redirect  user to create galleries page
 	url, err := u.router.Get(ViewCreateGalleryEndpoint).URL()
@@ -79,6 +83,26 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, url.String(), http.StatusFound)
+}
+
+// Logut will generate new token to the user and set the cookie in the http
+// with valid duration of 0.
+//
+// this is the same as making our current cookie invlaid
+func (u *User) Logout(w http.ResponseWriter, r *http.Request) {
+	// get user from conext
+	user := context.UserValue(r.Context())
+
+	// set remember token to user
+	if err := u.UserService.SaveNewRemeberToken(user); err != nil {
+		log.Println("Error while save new remeber toke to user")
+	}
+
+	// set remeber token in the cookie and make expire after 0 second
+	setRemeberTokenToCookie(w, user, 0)
+
+	// redirect user
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 type LoginForm struct {
@@ -127,7 +151,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// set remeber token in the cookie
-	setRemeberTokenToCookie(w, user)
+	setRemeberTokenToCookie(w, user, DEFAULT_TOKEN_VALID_DURATION)
 
 	// redirect to galleries page
 	url, err := u.router.Get(ViewGalleriesEndpoint).URL()
@@ -140,12 +164,13 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // setRemeberTokenToCookie is used to set cookie for user in the response writer
-func setRemeberTokenToCookie(w http.ResponseWriter, user *model.User) {
+func setRemeberTokenToCookie(w http.ResponseWriter, user *model.User, validDuration time.Duration) {
 	// create cookie to store user token
 	cookie := &http.Cookie{
 		Name:     "token",
 		Value:    user.RememberToken,
 		HttpOnly: true,
+		Expires:  time.Now().Add(validDuration),
 	}
 	// set cookie in the response writer header
 	http.SetCookie(w, cookie)

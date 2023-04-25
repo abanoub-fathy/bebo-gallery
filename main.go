@@ -61,6 +61,7 @@ func main() {
 	r.HandleFunc("/new", userController.CreateNewUser).Methods("POST")
 	r.Handle("/login", userController.LogInView).Methods("GET")
 	r.HandleFunc("/login", userController.Login).Methods("POST")
+	r.HandleFunc("/logout", requireUserMiddleWare.ApplyFunc(userController.Logout)).Methods("POST")
 
 	// create gallery controllers
 	galleryController := controllers.NewGallery(service.GalleryService, service.ImageService, r)
