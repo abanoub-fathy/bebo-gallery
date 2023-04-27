@@ -82,7 +82,10 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, url.String(), http.StatusFound)
+	views.RedirectWithAlert(w, r, url.String(), http.StatusFound, views.Alert{
+		Level:   views.AlertLevelSuccess,
+		Message: "Welcome to bebo gallery",
+	})
 }
 
 // Logut will generate new token to the user and set the cookie in the http
@@ -160,7 +163,7 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, url.String(), http.StatusFound)
+	views.RedirectWithAlert(w, r, url.String(), http.StatusFound, *views.NewAlert(views.AlertLevelSuccess, "welcome back"))
 }
 
 // setRemeberTokenToCookie is used to set cookie for user in the response writer

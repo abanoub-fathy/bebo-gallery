@@ -92,6 +92,13 @@ func (view *View) Render(w http.ResponseWriter, r *http.Request, params Params) 
 	// set the context user to params
 	params.User = context.UserValue(r.Context())
 
+	// get the alert between requests from r
+	redirectAlert, err := getAlert(r)
+	if err == nil && params.Alert == nil {
+		params.Alert = redirectAlert
+		clearAlert(w)
+	}
+
 	// add CSRFField method to the template
 	templateFuncMap := template.FuncMap{
 		csrf.TemplateTag: func() template.HTML {
@@ -136,4 +143,68 @@ func addTemplateExtension(files []string) {
 	for i, file := range files {
 		files[i] = file + TemplateExtension
 	}
+}
+
+func persistAlert(w http.ResponseWriter, alert Alert) {
+	durationOfAlert := time.Now().Add(time.Minute * 2)
+
+	levelCookie := &http.Cookie{
+		Name:     "alert_level",
+		Value:    alert.Level,
+		Expires:  durationOfAlert,
+		HttpOnly: true,
+	}
+
+	msgCookie := &http.Cookie{
+		Name:     "alert_msg",
+		Value:    alert.Message,
+		Expires:  durationOfAlert,
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, levelCookie)
+	http.SetCookie(w, msgCookie)
+}
+
+func clearAlert(w http.ResponseWriter) {
+	levelCookie := &http.Cookie{
+		Name:     "alert_level",
+		Value:    "",
+		Expires:  time.Now(),
+		HttpOnly: true,
+	}
+
+	msgCookie := &http.Cookie{
+		Name:     "alert_msg",
+		Value:    "",
+		Expires:  time.Now(),
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, levelCookie)
+	http.SetCookie(w, msgCookie)
+}
+
+func getAlert(r *http.Request) (*Alert, error) {
+	level, err := r.Cookie("alert_level")
+	if err != nil {
+		return nil, err
+	}
+
+	msg, err := r.Cookie("alert_msg")
+	if err != nil {
+		return nil, err
+	}
+
+	alert := &Alert{
+		Level:   level.Value,
+		Message: msg.Value,
+	}
+
+	return alert, nil
+}
+
+func RedirectWithAlert(w http.ResponseWriter, r *http.Request, urlStr string, code int, alert Alert) {
+	persistAlert(w, alert)
+	http.Redirect(w, r, urlStr, code)
 }
