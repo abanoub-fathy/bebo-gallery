@@ -8,12 +8,15 @@ import (
 	"github.com/abanoub-fathy/bebo-gallery/controllers"
 	"github.com/abanoub-fathy/bebo-gallery/middlewares"
 	"github.com/abanoub-fathy/bebo-gallery/model"
+	"github.com/abanoub-fathy/bebo-gallery/pkg/email"
 	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 )
 
 func main() {
+	// create new email client
+	emailClient := email.NewClient(config.AppConfig.EmailAPIKey)
 
 	// create new service
 	service, err := model.NewService(config.AppConfig.DatabaseURI)
@@ -54,7 +57,7 @@ func main() {
 	r.NotFoundHandler = staticController.NotFound
 
 	// create new user controller
-	userController := controllers.NewUser(service.UserService, r)
+	userController := controllers.NewUser(service.UserService, r, emailClient)
 
 	// user routes
 	r.Handle("/signup", userController.SignUpView).Methods("GET")

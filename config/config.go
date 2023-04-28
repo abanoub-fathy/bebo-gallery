@@ -14,6 +14,7 @@ type Configurations struct {
 	HashSecretKey   string
 	DatabaseURI     string
 	CSRFKey         string
+	EmailAPIKey     string
 	IsProductionEnv bool
 }
 
@@ -55,6 +56,10 @@ func newConfigurations() (*Configurations, error) {
 	if err != nil {
 		return nil, err
 	}
+	emailAPIKey, err := stringEnvVariable("EMAIL_API_KEY")
+	if err != nil {
+		return nil, err
+	}
 	isProductionEnv, err := boolEnvVariable("IS_PRODUCTION_ENV")
 	if err != nil {
 		return nil, err
@@ -65,6 +70,7 @@ func newConfigurations() (*Configurations, error) {
 		HashSecretKey:   hashSecretKey,
 		DatabaseURI:     databaseURI,
 		CSRFKey:         csrfKey,
+		EmailAPIKey:     emailAPIKey,
 		IsProductionEnv: isProductionEnv,
 	}, nil
 }
