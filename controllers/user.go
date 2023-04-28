@@ -7,6 +7,7 @@ import (
 
 	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/abanoub-fathy/bebo-gallery/pkg/context"
+	"github.com/abanoub-fathy/bebo-gallery/pkg/email"
 	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/abanoub-fathy/bebo-gallery/views"
 	"github.com/gorilla/mux"
@@ -19,16 +20,18 @@ type User struct {
 	LogInView   *views.View
 	UserService model.UserService
 	router      *mux.Router
+	EmailClient *email.Mailer
 }
 
 // NewUser return a pointer to User type which can be used
 // as a receiver to call the handler functions
-func NewUser(userService model.UserService, muxRouter *mux.Router) *User {
+func NewUser(userService model.UserService, muxRouter *mux.Router, emailClient *email.Mailer) *User {
 	return &User{
 		SignUpView:  views.NewView("base", "user/new"),
 		LogInView:   views.NewView("base", "user/login"),
 		router:      muxRouter,
 		UserService: userService,
+		EmailClient: emailClient,
 	}
 }
 
@@ -74,6 +77,9 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 
 	// set remember token
 	setRemeberTokenToCookie(w, user, DEFAULT_TOKEN_VALID_DURATION)
+
+	// send welcome email
+	go u.EmailClient.SendWelcomEmail(user.FirstName+" "+user.LastName, user.Email)
 
 	// redirect  user to create galleries page
 	url, err := u.router.Get(ViewCreateGalleryEndpoint).URL()
