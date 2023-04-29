@@ -6,7 +6,7 @@
   <div class="card-body">
     <h5 class="card-title">Welcome Back</h5>
     <p class="card-text">
-      {{template "loginForm" .}}
+      {{template "loginForm" .Data}}
     </p>
   </div>
 </div>
@@ -17,7 +17,7 @@
   {{ csrfField }}
   <div class="mb-3">
     <label for="email" class="form-label">Email address</label>
-    <input type="email" class="form-control" id="email" name="email" aria-describedby="emailHelp">
+    <input type="email" class="form-control" id="email" name="email" aria-describedby="emailHelp" value="{{.Email}}">
   </div>
   <div class="mb-3">
     <label for="password" class="form-label">Password</label>

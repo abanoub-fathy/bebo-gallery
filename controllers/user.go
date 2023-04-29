@@ -53,6 +53,9 @@ func (u *User) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	// define signUpForm
 	var form SignUpForm
 
+	// set the data of the form
+	params.Data = &form
+
 	// Parse the form
 	if err := utils.ParseForm(r, &form); err != nil {
 		params.SetAlert(err)
@@ -128,6 +131,9 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 
 	// define loginForm
 	form := LoginForm{}
+
+	// set the form struct to parms' Data
+	params.Data = &form
 
 	// Parse the form
 	if err := utils.ParseForm(r, &form); err != nil {
