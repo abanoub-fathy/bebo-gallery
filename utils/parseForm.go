@@ -2,22 +2,36 @@ package utils
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/gorilla/schema"
 )
 
-func ParseForm(r *http.Request, data interface{}) error {
-	// create schema decoder
-	decoder := schema.NewDecoder()
+func ParseForm(r *http.Request, dst interface{}) error {
 	err := r.ParseForm()
 	if err != nil {
 		return err
 	}
+	return parseValues(r.PostForm, dst)
+}
+
+func ParseURLParams(r *http.Request, dst interface{}) error {
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+	return parseValues(r.Form, dst)
+}
+
+func parseValues(values url.Values, dst interface{}) error {
+	// create schema decoder
+	decoder := schema.NewDecoder()
 
 	// ignore unknown keys
 	decoder.IgnoreUnknownKeys(true)
 
-	err = decoder.Decode(data, r.PostForm)
+	// decode the values in the destination
+	err := decoder.Decode(dst, values)
 	if err != nil {
 		return err
 	}

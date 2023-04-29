@@ -42,6 +42,14 @@ type SignUpForm struct {
 	Password  string `schema:"password,required"`
 }
 
+func (u *User) NewUser(w http.ResponseWriter, r *http.Request) {
+	var form SignUpForm
+	utils.ParseURLParams(r, &form)
+	u.SignUpView.Render(w, r, views.Params{
+		Data: form,
+	})
+}
+
 // CreateNewUser is a handler func that will receive data from sigup Form
 // and create a new user
 //

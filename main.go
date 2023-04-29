@@ -60,7 +60,7 @@ func main() {
 	userController := controllers.NewUser(service.UserService, r, emailClient)
 
 	// user routes
-	r.Handle("/signup", userController.SignUpView).Methods("GET")
+	r.HandleFunc("/signup", userController.NewUser).Methods("GET")
 	r.HandleFunc("/new", userController.CreateNewUser).Methods("POST")
 	r.Handle("/login", userController.LogInView).Methods("GET")
 	r.HandleFunc("/login", userController.Login).Methods("POST")
