@@ -51,7 +51,7 @@ func (s *Service) Close() error {
 // new fresh tables with no data inside them
 // then call this method
 func (s *Service) ResetDB() error {
-	if err := s.db.Migrator().DropTable(&User{}, &Gallery{}); err != nil {
+	if err := s.db.Migrator().DropTable(&User{}, &Gallery{}, &pwReset{}); err != nil {
 		return err
 	}
 	return s.AutoMigrate()
@@ -60,5 +60,5 @@ func (s *Service) ResetDB() error {
 // AutoMigrate should be used to auto migrate
 // all models to the database
 func (s *Service) AutoMigrate() error {
-	return s.db.AutoMigrate(&User{}, &Gallery{})
+	return s.db.AutoMigrate(&User{}, &Gallery{}, &pwReset{})
 }

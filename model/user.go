@@ -4,6 +4,7 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/abanoub-fathy/bebo-gallery/config"
 	"github.com/abanoub-fathy/bebo-gallery/pkg/hash"
@@ -75,6 +76,8 @@ var _ UserDB = &userGorm{}
 // UserService is an interface that contains
 // smethods to interact with user model
 type UserService interface {
+	UserDB
+
 	// AuthenticateUser is used to check the user email vs password
 	// if it is correct you will get the user and nil error
 	// otherwise you will get an error
@@ -83,13 +86,16 @@ type UserService interface {
 	// or other generic error during authenticate user
 	AuthenticateUser(email, password string) (*User, error)
 
-	UserDB
+	// Methods to Reset password
+	IntiateResetPassword(email string) (string, error)
+	CompleteResetPassword(token string, newPassword string) (*User, error)
 }
 
 // userService struct is an implementation for UserService
 // interface type.
 type userService struct {
 	UserDB
+	PassworResetDB pwResetDB
 }
 
 var _ UserService = &userService{}
@@ -100,12 +106,22 @@ func NewUserService(db *gorm.DB) UserService {
 	// create new userGorm
 	userGorm := newUserGorm(db)
 
+	// create new pwResetGorm
+	pwResetGorm := newPwResetGorm(db)
+
+	// create new hasher
+	hasher := hash.NewHasher(config.AppConfig.HashSecretKey)
+
 	// create userValidator
-	userValidator := newUserValidator(userGorm, hash.NewHasher(config.AppConfig.HashSecretKey))
+	userValidator := newUserValidator(userGorm, hasher)
+
+	// create resetPasswordValidator
+	resetPasswordValidator := newPwResetValidator(pwResetGorm, hasher)
 
 	// set the userGorm to UserDB in the UserService
 	userService := &userService{
-		UserDB: userValidator,
+		UserDB:         userValidator,
+		PassworResetDB: resetPasswordValidator,
 	}
 
 	// return
@@ -375,6 +391,54 @@ func (userService *userService) AuthenticateUser(email, password string) (*User,
 	}
 
 	// return the user and nil error
+	return user, nil
+}
+
+func (us *userService) IntiateResetPassword(email string) (string, error) {
+	user, err := us.UserDB.FindByEmail(email)
+	if err != nil {
+		return "", err
+	}
+
+	pw := &pwReset{UserID: user.ID}
+	err = us.PassworResetDB.Create(pw)
+	if err != nil {
+		return "", err
+	}
+
+	return pw.Token, nil
+}
+
+func (us *userService) CompleteResetPassword(token string, newPassword string) (*User, error) {
+	// get the pwReset by token
+	pw, err := us.PassworResetDB.GetByToken(token)
+	if err != nil {
+		switch err {
+		case ErrNotFound:
+			return nil, ErrInvalidToken
+		default:
+			return nil, err
+		}
+	}
+
+	// check if the pwResetToken is not expired
+	expirationTokenTime := pw.CreatedAt.Add(time.Hour)
+	if time.Now().After(expirationTokenTime) {
+		return nil, ErrInvalidToken
+	}
+
+	// update userPassword
+	updates := map[string]interface{}{
+		"password": newPassword,
+	}
+	user, err := us.UserDB.FindAndUpdateByID(pw.UserID.String(), updates)
+	if err != nil {
+		return nil, err
+	}
+
+	// delete the pwResetToken
+	us.PassworResetDB.Delete(pw.ID)
+
 	return user, nil
 }
 

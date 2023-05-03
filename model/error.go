@@ -37,6 +37,9 @@ const (
 	// ErrRememberTooShort is returned when a remember token is
 	// not at least 32 bytes
 	ErrRememberTooShort publicError = "model: remember token must be at least 32 bytes"
+
+	// ErrInvalidToken is returned when the token is not existed while reseting password
+	ErrInvalidToken publicError = "model: token provided is not valid"
 )
 
 func (e publicError) Error() string {

@@ -9,9 +9,9 @@ import (
 
 type pwReset struct {
 	Base
-	UserID    uuid.UUID `gorm:"not null;unique;index"`
+	UserID    uuid.UUID `gorm:"not null"`
 	Token     string    `gorm:"-"`
-	TokenHash string    `gorm:"not null;"`
+	TokenHash string    `gorm:"not null;unique;index"`
 }
 
 type pwResetDB interface {
@@ -110,6 +110,10 @@ func (pv *pwResetValidator) validateID(p *pwReset) error {
 
 type pwResetGorm struct {
 	db *gorm.DB
+}
+
+func newPwResetGorm(db *gorm.DB) *pwResetGorm {
+	return &pwResetGorm{db: db}
 }
 
 // make sure that pwResetGorm implements pwResetDB
