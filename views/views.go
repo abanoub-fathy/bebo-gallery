@@ -150,6 +150,7 @@ func persistAlert(w http.ResponseWriter, alert Alert) {
 
 	levelCookie := &http.Cookie{
 		Name:     "alert_level",
+		Path:     "/",
 		Value:    alert.Level,
 		Expires:  durationOfAlert,
 		HttpOnly: true,
@@ -157,6 +158,7 @@ func persistAlert(w http.ResponseWriter, alert Alert) {
 
 	msgCookie := &http.Cookie{
 		Name:     "alert_msg",
+		Path:     "/",
 		Value:    alert.Message,
 		Expires:  durationOfAlert,
 		HttpOnly: true,

@@ -1,3 +1,16 @@
+/* change version each time you make updates*/
+/* version 0.2 */
 footer {
   margin-top: 100px;
+}
+
+a.bottom-card-link {
+  display: block;
+  padding-top: 5px;
+  text-decoration: none;
+}
+
+a.bottom-card-link:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
