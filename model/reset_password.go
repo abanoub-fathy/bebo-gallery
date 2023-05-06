@@ -136,7 +136,7 @@ func (pg *pwResetGorm) Create(p *pwReset) error {
 }
 
 func (pg *pwResetGorm) Delete(id uuid.UUID) error {
-	return pg.db.Delete(pwReset{
+	return pg.db.Delete(&pwReset{
 		Base: Base{
 			ID: id,
 		},
