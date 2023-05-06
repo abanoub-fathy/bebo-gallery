@@ -238,11 +238,74 @@ func (u *User) ForgetPassword(w http.ResponseWriter, r *http.Request) {
 	views.RedirectWithAlert(w, r, "/password/reset", http.StatusFound, alert)
 }
 
+type ResetPasswordForm struct {
+	Token       string `schema:"token"`
+	NewPassword string `schema:"password"`
+}
+
+// [GET] /password/reset
+func (u *User) ResetPasswordPage(w http.ResponseWriter, r *http.Request) {
+	resetPasswordForm := ResetPasswordForm{}
+	viewParams := views.Params{
+		Data: &resetPasswordForm,
+	}
+	if err := utils.ParseURLParams(r, &resetPasswordForm); err != nil {
+		viewParams.SetAlert(err)
+	}
+	u.ResetPasswordView.Render(w, r, viewParams)
+}
+
+// [POST] /password/reset
+func (u *User) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	// define a reset password
+	form := ResetPasswordForm{}
+
+	// define view params
+	viewParams := views.Params{
+		Data: &form,
+	}
+
+	// parse the form
+	if err := utils.ParseForm(r, &form); err != nil {
+		viewParams.SetAlert(err)
+		u.ResetPasswordView.Render(w, r, viewParams)
+		return
+	}
+
+	// complete the reset password
+	user, err := u.UserService.CompleteResetPassword(form.Token, form.NewPassword)
+	if err != nil {
+		viewParams.SetAlert(err)
+		u.ResetPasswordView.Render(w, r, viewParams)
+		return
+	}
+
+	// set remember token to user
+	if err := u.UserService.SaveNewRemeberToken(user); err != nil {
+		viewParams.SetAlert(err)
+		u.ResetPasswordView.Render(w, r, viewParams)
+		return
+	}
+
+	// set remeber token in the cookie
+	setRemeberTokenToCookie(w, user, DEFAULT_TOKEN_VALID_DURATION)
+
+	// redirect to galleries page
+	url, err := u.router.Get(ViewGalleriesEndpoint).URL()
+	if err != nil {
+		log.Println(err)
+		http.Redirect(w, r, "/password/reset", http.StatusInternalServerError)
+		return
+	}
+	views.RedirectWithAlert(w, r, url.String(), http.StatusFound, *views.NewAlert(views.AlertLevelSuccess, "password is changed. Successfully!"))
+}
+
 // setRemeberTokenToCookie is used to set cookie for user in the response writer
 func setRemeberTokenToCookie(w http.ResponseWriter, user *model.User, validDuration time.Duration) {
 	// create cookie to store user token
 	cookie := &http.Cookie{
 		Name:     "token",
+		Path:     "/",
 		Value:    user.RememberToken,
 		HttpOnly: true,
 		Expires:  time.Now().Add(validDuration),

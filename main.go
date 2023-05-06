@@ -63,9 +63,11 @@ func main() {
 	r.HandleFunc("/signup", userController.NewUser).Methods("GET")
 	r.HandleFunc("/new", userController.CreateNewUser).Methods("POST")
 	r.Handle("/login", userController.LogInView).Methods("GET")
+	r.HandleFunc("/login", userController.Login).Methods("POST")
 	r.HandleFunc("/password/forget", userController.ForgetPasswordPage).Methods("GET")
 	r.HandleFunc("/password/forget", userController.ForgetPassword).Methods("POST")
-	r.HandleFunc("/login", userController.Login).Methods("POST")
+	r.HandleFunc("/password/reset", userController.ResetPasswordPage).Methods("GET")
+	r.HandleFunc("/password/reset", userController.ResetPassword).Methods("POST")
 	r.HandleFunc("/logout", requireUserMiddleWare.ApplyFunc(userController.Logout)).Methods("POST")
 
 	// create gallery controllers
