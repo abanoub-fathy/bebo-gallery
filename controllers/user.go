@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -16,22 +17,26 @@ import (
 const DEFAULT_TOKEN_VALID_DURATION = time.Hour * 120
 
 type User struct {
-	SignUpView  *views.View
-	LogInView   *views.View
-	UserService model.UserService
-	router      *mux.Router
-	EmailClient *email.Mailer
+	SignUpView         *views.View
+	LogInView          *views.View
+	ForgetPasswordView *views.View
+	ResetPasswordView  *views.View
+	UserService        model.UserService
+	router             *mux.Router
+	EmailClient        *email.Mailer
 }
 
 // NewUser return a pointer to User type which can be used
 // as a receiver to call the handler functions
 func NewUser(userService model.UserService, muxRouter *mux.Router, emailClient *email.Mailer) *User {
 	return &User{
-		SignUpView:  views.NewView("base", "user/new"),
-		LogInView:   views.NewView("base", "user/login"),
-		router:      muxRouter,
-		UserService: userService,
-		EmailClient: emailClient,
+		SignUpView:         views.NewView("base", "user/new"),
+		LogInView:          views.NewView("base", "user/login"),
+		ForgetPasswordView: views.NewView("base", "user/password_forget"),
+		ResetPasswordView:  views.NewView("base", "user/password_reset"),
+		router:             muxRouter,
+		UserService:        userService,
+		EmailClient:        emailClient,
 	}
 }
 
@@ -184,6 +189,53 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	views.RedirectWithAlert(w, r, url.String(), http.StatusFound, *views.NewAlert(views.AlertLevelSuccess, "welcome back"))
+}
+
+type ForgetPasswordForm struct {
+	Email string `schema:"email"`
+}
+
+// [GET] /password/reset
+func (u *User) ForgetPasswordPage(w http.ResponseWriter, r *http.Request) {
+	var form ForgetPasswordForm
+	utils.ParseURLParams(r, &form)
+	u.ForgetPasswordView.Render(w, r, views.Params{
+		Data: form,
+	})
+}
+
+// [POST] /password/reset
+func (u *User) ForgetPassword(w http.ResponseWriter, r *http.Request) {
+	// define view params
+	params := views.Params{}
+
+	// define form
+	form := ForgetPasswordForm{}
+
+	// set the params Data to be the form data
+	params.Data = &form
+
+	// parse the form
+	if err := utils.ParseForm(r, &form); err != nil {
+		params.SetAlert(err)
+		u.ForgetPasswordView.Render(w, r, params)
+		return
+	}
+
+	token, err := u.UserService.IntiateResetPassword(form.Email)
+	if err != nil {
+		params.SetAlert(err)
+		u.ForgetPasswordView.Render(w, r, params)
+		return
+	}
+
+	fmt.Println("token = ", token)
+
+	// TODO: send email to user
+
+	// redirect with alert
+	alert := *views.NewAlert(views.AlertLevelSuccess, "Reset Password instructions sent to your email address. Please check your inbox")
+	views.RedirectWithAlert(w, r, "/password/reset", http.StatusFound, alert)
 }
 
 // setRemeberTokenToCookie is used to set cookie for user in the response writer
