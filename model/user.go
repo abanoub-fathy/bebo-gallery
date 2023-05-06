@@ -290,6 +290,13 @@ func (uv *userValidator) FindUserByRememberToken(token string) (*User, error) {
 func (uv *userValidator) FindAndUpdateByID(userID string, updates map[string]interface{}) (*User, error) {
 	user := &User{}
 	if _, emailUpdate := updates["email"]; emailUpdate {
+		// assert the type
+		if email, ok := updates["email"].(string); !ok {
+			return nil, errors.New("invalid type for email address update")
+		} else {
+			user.Email = email
+		}
+
 		err := runUserValidationFuncs(user, uv.NormalizeEmail, uv.ValidateEmail, uv.EmailIsNotTaken)
 		if err != nil {
 			return nil, err
@@ -297,6 +304,13 @@ func (uv *userValidator) FindAndUpdateByID(userID string, updates map[string]int
 	}
 
 	if _, passwordUpdate := updates["password"]; passwordUpdate {
+		// assert the type
+		if password, ok := updates["password"].(string); !ok {
+			return nil, errors.New("invalid type for password update")
+		} else {
+			user.Password = password
+		}
+
 		err := runUserValidationFuncs(user, uv.ValidatePassword(8), uv.HashUserPassword)
 		if err != nil {
 			return nil, err
