@@ -1,8 +1,11 @@
 package email
 
 import (
+	"fmt"
 	"log"
+	"net/url"
 
+	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
@@ -35,4 +38,25 @@ func (mailer *Mailer) sendEmail(subject, toName, toEmailAddress, plainTextConten
 
 func (mailer *Mailer) SendWelcomEmail(userName, emailAddress string) error {
 	return mailer.sendEmail("welcome to our wonderful app", userName, emailAddress, "Hello our user please visit our site https://www.rescounts.com", "<h1>You are welcome here!</h1>")
+}
+
+func (mailer *Mailer) SendResetPasswordEmail(user model.User, token string) error {
+	values := url.Values{}
+	values.Set("token", token)
+	resetURL := "http://localhost:3000/password/reset" + "?" + values.Encode()
+	return mailer.sendEmail(
+		"Reset Your Password",
+		user.FirstName+" "+user.LastName,
+		user.Email,
+		"",
+		fmt.Sprintf(`
+			<h1>Hello, %s.</h1>
+			<h3> We have received that you want to reset your password </h3>
+			<p>
+				You can reset your password from this link
+				<a href="%s">here</a>
+			</p>
+				`, user.FirstName, resetURL,
+		),
+	)
 }

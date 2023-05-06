@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -222,6 +221,13 @@ func (u *User) ForgetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user, err := u.UserService.FindByEmail(form.Email)
+	if err != nil {
+		params.SetAlert(err)
+		u.ForgetPasswordView.Render(w, r, params)
+		return
+	}
+
 	token, err := u.UserService.IntiateResetPassword(form.Email)
 	if err != nil {
 		params.SetAlert(err)
@@ -229,9 +235,8 @@ func (u *User) ForgetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("token = ", token)
-
-	// TODO: send email to user
+	// send email to user
+	u.EmailClient.SendResetPasswordEmail(*user, token)
 
 	// redirect with alert
 	alert := *views.NewAlert(views.AlertLevelSuccess, "Reset Password instructions sent to your email address. Please check your inbox")
