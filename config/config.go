@@ -16,6 +16,10 @@ type Configurations struct {
 	CSRFKey         string
 	EmailAPIKey     string
 	IsProductionEnv bool
+	OAuthAppKey     string
+	OAuthSecretKey  string
+	AuthURL         string
+	TokenURL        string
 }
 
 // AppConfig is the configurations for the app you should load the config
@@ -64,6 +68,22 @@ func newConfigurations() (*Configurations, error) {
 	if err != nil {
 		return nil, err
 	}
+	dropboxAppKey, err := stringEnvVariable("DROPBOX_APP_KEY")
+	if err != nil {
+		return nil, err
+	}
+	dropboxSecretKey, err := stringEnvVariable("DROPBOX_SECRET_KEY")
+	if err != nil {
+		return nil, err
+	}
+	dropboxAuthURL, err := stringEnvVariable("DROPBOX_AUTH_URL")
+	if err != nil {
+		return nil, err
+	}
+	dropboxTokenURL, err := stringEnvVariable("DROPBOX_TOKEN_URL")
+	if err != nil {
+		return nil, err
+	}
 
 	return &Configurations{
 		Port:            port,
@@ -72,6 +92,10 @@ func newConfigurations() (*Configurations, error) {
 		CSRFKey:         csrfKey,
 		EmailAPIKey:     emailAPIKey,
 		IsProductionEnv: isProductionEnv,
+		OAuthAppKey:     dropboxAppKey,
+		OAuthSecretKey:  dropboxSecretKey,
+		AuthURL:         dropboxAuthURL,
+		TokenURL:        dropboxTokenURL,
 	}, nil
 }
 
@@ -106,7 +130,7 @@ func boolEnvVariable(name string) (bool, error) {
 		return false, err
 	}
 
-	// convert the value to int
+	// convert the value to bool
 	boolVal, err := strconv.ParseBool(strVal)
 	if err != nil {
 		return false, err
