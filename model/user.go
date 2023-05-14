@@ -26,6 +26,7 @@ type User struct {
 	RememberToken    string `gorm:"-"`
 	RemeberTokenHash string `gorm:"unique;index"`
 	Galleries        []Gallery
+	OAuths           []OAuth `gorm:"foreignKey:UserID"`
 }
 
 // UserDB is used to interact with the users database.

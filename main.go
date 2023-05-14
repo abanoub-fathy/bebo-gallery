@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/abanoub-fathy/bebo-gallery/config"
 	"github.com/abanoub-fathy/bebo-gallery/controllers"
@@ -12,6 +13,7 @@ import (
 	"github.com/abanoub-fathy/bebo-gallery/utils"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
+	"golang.org/x/oauth2"
 )
 
 func main() {
@@ -58,6 +60,68 @@ func main() {
 
 	// create new user controller
 	userController := controllers.NewUser(service.UserService, r, emailClient)
+
+	// oAuth
+	oAuthConfig := oauth2.Config{
+		ClientID:     config.AppConfig.OAuthAppKey,
+		ClientSecret: config.AppConfig.OAuthSecretKey,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  config.AppConfig.AuthURL,
+			TokenURL: config.AppConfig.TokenURL,
+		},
+		RedirectURL: "http://localhost:3000/oauth/dropbox/callback",
+	}
+
+	r.HandleFunc("/oauth/dropbox/connect", func(w http.ResponseWriter, r *http.Request) {
+		state := csrf.Token(r)
+
+		// create a cookie with the state
+		coockie := &http.Cookie{
+			Name:     "oauth_state",
+			Value:    state,
+			Path:     "/",
+			HttpOnly: true,
+		}
+		// setting the cookie
+		http.SetCookie(w, coockie)
+
+		// generate and redirect to authURL
+		url := oAuthConfig.AuthCodeURL(state)
+		http.Redirect(w, r, url, http.StatusFound)
+	})
+
+	r.HandleFunc("/oauth/dropbox/callback", func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+		code := query.Get("code")
+		state := query.Get("state")
+
+		// get state from request cookie
+		cookie, err := r.Cookie("oauth_state")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		} else if cookie == nil || cookie.Value != state {
+			http.Error(w, "invalid state", http.StatusBadRequest)
+			return
+		}
+
+		// expire the state cookie
+		cookie.Value = ""
+		cookie.Expires = time.Now()
+		http.SetCookie(w, cookie)
+
+		// exchange the code
+		token, err := oAuthConfig.Exchange(r.Context(), code)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Fprintf(w, "%+v", token)
+
+		// w.Header().Set("Content-Type", "application/json")
+		// json.NewEncoder(w).Encode(token)
+	})
 
 	// user routes
 	r.HandleFunc("/signup", userController.NewUser).Methods("GET")
