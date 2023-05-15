@@ -11,6 +11,10 @@ const (
 	ErrProviderNotSupported publicError = "model: provider not supported"
 )
 
+const (
+	OAuthDropboxProvider = "dropbox"
+)
+
 type OAuth struct {
 	Base
 	UserID   uuid.UUID `gorm:"not null;uniqueIndex:user_provider_index"`
@@ -81,7 +85,7 @@ func (ov *oAuthValidator) validateUserID(oAuth *OAuth) error {
 func (ov *oAuthValidator) validateProvider(oAuth *OAuth) error {
 	if oAuth.Provider == "" {
 		return ErrProviderIsEmpty
-	} else if oAuth.Provider != "dropbox" {
+	} else if oAuth.Provider != OAuthDropboxProvider {
 		return ErrProviderNotSupported
 	}
 	return nil
@@ -90,7 +94,6 @@ func (ov *oAuthValidator) validateProvider(oAuth *OAuth) error {
 func (ov *oAuthValidator) Create(oAuth *OAuth) error {
 	err := runOAuthValidationFns(oAuth,
 		ov.validateProvider,
-		ov.validateOAuthID,
 		ov.validateUserID,
 	)
 	if err != nil {
@@ -156,7 +159,7 @@ func (og *oAuthGorm) Find(userID, provider string) (*OAuth, error) {
 }
 
 func (og *oAuthGorm) Delete(id string) error {
-	return og.db.Delete(&OAuth{
+	return og.db.Unscoped().Delete(&OAuth{
 		Base: Base{
 			ID: uuid.FromStringOrNil(id),
 		},
