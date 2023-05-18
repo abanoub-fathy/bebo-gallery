@@ -60,6 +60,17 @@ func main() {
 	// create new user controller
 	userController := controllers.NewUser(service.UserService, r, emailClient)
 
+	// user routes
+	r.HandleFunc("/signup", userController.NewUser).Methods("GET")
+	r.HandleFunc("/new", userController.CreateNewUser).Methods("POST")
+	r.Handle("/login", userController.LogInView).Methods("GET")
+	r.HandleFunc("/login", userController.Login).Methods("POST")
+	r.HandleFunc("/password/forget", userController.ForgetPasswordPage).Methods("GET")
+	r.HandleFunc("/password/forget", userController.ForgetPassword).Methods("POST")
+	r.HandleFunc("/password/reset", userController.ResetPasswordPage).Methods("GET")
+	r.HandleFunc("/password/reset", userController.ResetPassword).Methods("POST")
+	r.HandleFunc("/logout", requireUserMiddleWare.ApplyFunc(userController.Logout)).Methods("POST")
+
 	// oAuth
 	oAuthConfig := oauth2.Config{
 		ClientID:     config.AppConfig.OAuthAppKey,
@@ -71,22 +82,11 @@ func main() {
 		RedirectURL: "http://localhost:3000/oauth/dropbox/callback",
 	}
 
+	// create new oauthController
 	ouathController := controllers.NewOAuthController(&oAuthConfig, service.OAuthService)
-
 	r.HandleFunc("/oauth/dropbox/connect", requireUserMiddleWare.ApplyFunc(ouathController.Connect))
 	r.HandleFunc("/oauth/dropbox/callback", requireUserMiddleWare.ApplyFunc(ouathController.Callback))
 	r.HandleFunc("/oauth/dropbox/test", requireUserMiddleWare.ApplyFunc(ouathController.Testfunc))
-
-	// user routes
-	r.HandleFunc("/signup", userController.NewUser).Methods("GET")
-	r.HandleFunc("/new", userController.CreateNewUser).Methods("POST")
-	r.Handle("/login", userController.LogInView).Methods("GET")
-	r.HandleFunc("/login", userController.Login).Methods("POST")
-	r.HandleFunc("/password/forget", userController.ForgetPasswordPage).Methods("GET")
-	r.HandleFunc("/password/forget", userController.ForgetPassword).Methods("POST")
-	r.HandleFunc("/password/reset", userController.ResetPasswordPage).Methods("GET")
-	r.HandleFunc("/password/reset", userController.ResetPassword).Methods("POST")
-	r.HandleFunc("/logout", requireUserMiddleWare.ApplyFunc(userController.Logout)).Methods("POST")
 
 	// create gallery controllers
 	galleryController := controllers.NewGallery(service.GalleryService, service.ImageService, r)
