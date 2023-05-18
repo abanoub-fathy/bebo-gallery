@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/abanoub-fathy/bebo-gallery/config"
 	"github.com/abanoub-fathy/bebo-gallery/controllers"
@@ -72,56 +71,11 @@ func main() {
 		RedirectURL: "http://localhost:3000/oauth/dropbox/callback",
 	}
 
-	r.HandleFunc("/oauth/dropbox/connect", func(w http.ResponseWriter, r *http.Request) {
-		state := csrf.Token(r)
+	ouathController := controllers.NewOAuthController(&oAuthConfig, service.OAuthService)
 
-		// create a cookie with the state
-		coockie := &http.Cookie{
-			Name:     "oauth_state",
-			Value:    state,
-			Path:     "/",
-			HttpOnly: true,
-		}
-		// setting the cookie
-		http.SetCookie(w, coockie)
-
-		// generate and redirect to authURL
-		url := oAuthConfig.AuthCodeURL(state)
-		http.Redirect(w, r, url, http.StatusFound)
-	})
-
-	r.HandleFunc("/oauth/dropbox/callback", func(w http.ResponseWriter, r *http.Request) {
-		query := r.URL.Query()
-		code := query.Get("code")
-		state := query.Get("state")
-
-		// get state from request cookie
-		cookie, err := r.Cookie("oauth_state")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		} else if cookie == nil || cookie.Value != state {
-			http.Error(w, "invalid state", http.StatusBadRequest)
-			return
-		}
-
-		// expire the state cookie
-		cookie.Value = ""
-		cookie.Expires = time.Now()
-		http.SetCookie(w, cookie)
-
-		// exchange the code
-		token, err := oAuthConfig.Exchange(r.Context(), code)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		fmt.Fprintf(w, "%+v", token)
-
-		// w.Header().Set("Content-Type", "application/json")
-		// json.NewEncoder(w).Encode(token)
-	})
+	r.HandleFunc("/oauth/dropbox/connect", requireUserMiddleWare.ApplyFunc(ouathController.Connect))
+	r.HandleFunc("/oauth/dropbox/callback", requireUserMiddleWare.ApplyFunc(ouathController.Callback))
+	r.HandleFunc("/oauth/dropbox/test", requireUserMiddleWare.ApplyFunc(ouathController.Testfunc))
 
 	// user routes
 	r.HandleFunc("/signup", userController.NewUser).Methods("GET")
