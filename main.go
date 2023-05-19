@@ -72,7 +72,7 @@ func main() {
 	r.HandleFunc("/logout", requireUserMiddleWare.ApplyFunc(userController.Logout)).Methods("POST")
 
 	// oAuth
-	oAuthConfig := oauth2.Config{
+	dropboxOAuthConfig := oauth2.Config{
 		ClientID:     config.AppConfig.OAuthAppKey,
 		ClientSecret: config.AppConfig.OAuthSecretKey,
 		Endpoint: oauth2.Endpoint{
@@ -81,12 +81,15 @@ func main() {
 		},
 		RedirectURL: "http://localhost:3000/oauth/dropbox/callback",
 	}
+	oAuthConfigs := map[string]*oauth2.Config{
+		model.OAuthDropboxProvider: &dropboxOAuthConfig,
+	}
 
 	// create new oauthController
-	ouathController := controllers.NewOAuthController(&oAuthConfig, service.OAuthService)
-	r.HandleFunc("/oauth/dropbox/connect", requireUserMiddleWare.ApplyFunc(ouathController.Connect))
-	r.HandleFunc("/oauth/dropbox/callback", requireUserMiddleWare.ApplyFunc(ouathController.Callback))
-	r.HandleFunc("/oauth/dropbox/test", requireUserMiddleWare.ApplyFunc(ouathController.Testfunc))
+	ouathController := controllers.NewOAuthController(oAuthConfigs, service.OAuthService)
+	r.HandleFunc("/oauth/{provider:[a-z]+}/connect", requireUserMiddleWare.ApplyFunc(ouathController.Connect))
+	r.HandleFunc("/oauth/{provider:[a-z]+}/callback", requireUserMiddleWare.ApplyFunc(ouathController.Callback))
+	r.HandleFunc("/oauth/dropbox/test", requireUserMiddleWare.ApplyFunc(ouathController.TestDropboxfunc))
 
 	// create gallery controllers
 	galleryController := controllers.NewGallery(service.GalleryService, service.ImageService, r)

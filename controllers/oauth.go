@@ -11,23 +11,35 @@ import (
 	"github.com/abanoub-fathy/bebo-gallery/model"
 	ctx "github.com/abanoub-fathy/bebo-gallery/pkg/context"
 	"github.com/gorilla/csrf"
+	"github.com/gorilla/mux"
 	"golang.org/x/oauth2"
 )
 
 type oAuthController struct {
-	OAuthConfig *oauth2.Config
-	Service     model.OAuthService
+	OAuthConfigs map[string]*oauth2.Config
+	Service      model.OAuthService
 }
 
 // NewOAuthController is the constructor for making
-func NewOAuthController(oAuthConfig *oauth2.Config, service model.OAuthService) *oAuthController {
+func NewOAuthController(oauthConfigs map[string]*oauth2.Config, service model.OAuthService) *oAuthController {
 	return &oAuthController{
-		OAuthConfig: oAuthConfig,
-		Service:     service,
+		OAuthConfigs: oauthConfigs,
+		Service:      service,
 	}
 }
 
 func (c *oAuthController) Connect(w http.ResponseWriter, r *http.Request) {
+	// get the provider
+	provider := mux.Vars(r)["provider"]
+
+	// check if the provider is valid
+	oauthConfig, ok := c.OAuthConfigs[provider]
+	if !ok {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+
+	// create state
 	state := csrf.Token(r)
 
 	// create a cookie with the state
@@ -41,11 +53,21 @@ func (c *oAuthController) Connect(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, coockie)
 
 	// generate and redirect to authURL
-	url := c.OAuthConfig.AuthCodeURL(state)
+	url := oauthConfig.AuthCodeURL(state)
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
 func (c *oAuthController) Callback(w http.ResponseWriter, r *http.Request) {
+	// get the provider
+	provider := mux.Vars(r)["provider"]
+
+	// check if the provider is valid
+	oauthConfig, ok := c.OAuthConfigs[provider]
+	if !ok {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+
 	// get the query params values
 	query := r.URL.Query()
 	code := query.Get("code")
@@ -67,7 +89,7 @@ func (c *oAuthController) Callback(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, cookie)
 
 	// exchange the code
-	token, err := c.OAuthConfig.Exchange(r.Context(), code)
+	token, err := oauthConfig.Exchange(r.Context(), code)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -97,12 +119,16 @@ func (c *oAuthController) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "%+v", token)
-
-	// w.Header().Set("Content-Type", "application/json")
-	// json.NewEncoder(w).Encode(token)
 }
 
-func (c *oAuthController) Testfunc(w http.ResponseWriter, r *http.Request) {
+func (c *oAuthController) TestDropboxfunc(w http.ResponseWriter, r *http.Request) {
+	// check if the provider is valid
+	oauthConfig, ok := c.OAuthConfigs[model.OAuthDropboxProvider]
+	if !ok {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+
 	path := r.URL.Query().Get("path")
 
 	// get the user from ctx
@@ -115,7 +141,7 @@ func (c *oAuthController) Testfunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create http client
-	client := c.OAuthConfig.Client(context.Background(), &oauth.Token)
+	client := oauthConfig.Client(context.Background(), &oauth.Token)
 
 	req, err := http.NewRequest(http.MethodPost, "https://api.dropboxapi.com/2/files/list_folder", strings.NewReader(fmt.Sprintf(`{"path": "%v"}`, path)))
 	if err != nil {
