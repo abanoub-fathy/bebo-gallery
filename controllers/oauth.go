@@ -1,15 +1,14 @@
 package controllers
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/abanoub-fathy/bebo-gallery/model"
 	ctx "github.com/abanoub-fathy/bebo-gallery/pkg/context"
+	"github.com/abanoub-fathy/bebo-gallery/pkg/dropbox"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"golang.org/x/oauth2"
@@ -122,13 +121,7 @@ func (c *oAuthController) Callback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *oAuthController) TestDropboxfunc(w http.ResponseWriter, r *http.Request) {
-	// check if the provider is valid
-	oauthConfig, ok := c.OAuthConfigs[model.OAuthDropboxProvider]
-	if !ok {
-		http.Error(w, "not found", http.StatusNotFound)
-		return
-	}
-
+	// get the path
 	path := r.URL.Query().Get("path")
 
 	// get the user from ctx
@@ -140,20 +133,16 @@ func (c *oAuthController) TestDropboxfunc(w http.ResponseWriter, r *http.Request
 		panic(err)
 	}
 
-	// create http client
-	client := oauthConfig.Client(context.Background(), &oauth.Token)
-
-	req, err := http.NewRequest(http.MethodPost, "https://api.dropboxapi.com/2/files/list_folder", strings.NewReader(fmt.Sprintf(`{"path": "%v"}`, path)))
+	// list folders
+	folders, files, err := dropbox.List(oauth.AccessToken, path)
 	if err != nil {
-		panic(err)
+		fmt.Println("error =", err)
 	}
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
 
 	w.Header().Add("Content-Type", "application/json")
-	io.Copy(w, resp.Body)
+	response := map[string]interface{}{
+		"folders": folders,
+		"files":   files,
+	}
+	json.NewEncoder(w).Encode(response)
 }
