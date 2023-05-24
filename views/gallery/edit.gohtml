@@ -11,6 +11,7 @@
 
 <div class="row mb-5">
   {{template "uploadImagesForm" .Data}}
+  {{template "UploadDropboxImages" .Data}}
 </div>
 
 <div class="row mb-5">
@@ -71,6 +72,11 @@
       <button type="submit" class="btn btn-primary">Upload</button>
     </div>
   </div>
+  <div class="form-group row mb-2 mt-4">
+    <div class="col-md-12" id="dropboxBtnContainer">
+     <!-- Dropbox Button Here  -->
+    </div>
+  </div>
 </form>
 {{end}}
 
@@ -86,4 +92,46 @@
   {{ csrfField }}
   <button type="submit" class="btn btn-link">Delete</button>
 </form>
+{{end}}
+
+
+{{define "UploadDropboxImages"}}
+<form method="POST" action="/galleries/{{.ID}}/images/link" enctype="multipart/form-data" id="dropboxUploadForm">
+  {{ csrfField }}
+  <!-- We will genereate inputs in this form -->
+</form>
+{{end}}
+
+{{define "script"}}
+  <script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="s71prws6gl6wqju"></script>
+  <script type="text/javascript">
+    let dbxForm = document.getElementById("dropboxUploadForm")
+    options = {
+      success: function(files) {
+        files.forEach(file => {
+          // create input element
+          let input = document.createElement("input")
+          input.name = "links"
+          input.type = "hidden"
+          input.value = file.link
+
+          // append the input element to the form
+          dbxForm.appendChild(input)
+        })
+
+        // submit the form
+        dbxForm.submit()
+      },
+      cancel: function() {
+        alert("no files are selected")
+      },
+      linkType: "direct",
+      multiselect: true,
+      extensions: ["images"],
+      folderselect: false,
+    };
+
+    let button = Dropbox.createChooseButton(options);
+    document.getElementById("dropboxBtnContainer").appendChild(button);
+  </script>
 {{end}}
