@@ -102,6 +102,7 @@ func main() {
 	r.HandleFunc("/galleries/{galleryID}/edit", requireUserMiddleWare.ApplyFunc(galleryController.EditGalleryPage)).Methods("GET").Name(controllers.EditGalleryPageEndpoint)
 	r.HandleFunc("/galleries/{galleryID}/edit", requireUserMiddleWare.ApplyFunc(galleryController.EditGallery)).Methods("POST")
 	r.HandleFunc("/galleries/{galleryID}/images", requireUserMiddleWare.ApplyFunc(galleryController.UploadImage)).Methods("POST")
+	r.HandleFunc("/galleries/{galleryID}/images/link", requireUserMiddleWare.ApplyFunc(galleryController.UploadImageViaLink)).Methods("POST")
 	r.HandleFunc("/galleries/{galleryID}/images/{fileName}/delete", requireUserMiddleWare.ApplyFunc(galleryController.DeleteImage)).Methods("POST")
 	r.HandleFunc("/galleries/{galleryID}/delete", requireUserMiddleWare.ApplyFunc(galleryController.DeleteGallery)).Methods("POST")
 

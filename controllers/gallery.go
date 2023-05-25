@@ -2,7 +2,10 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"path/filepath"
+	"sync"
 
 	"github.com/abanoub-fathy/bebo-gallery/model"
 	"github.com/abanoub-fathy/bebo-gallery/pkg/context"
@@ -235,6 +238,79 @@ func (g *Gallery) UploadImage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	// redirect user to show gallery page
+	url, err := g.router.Get(EditGalleryPageEndpoint).URL("galleryID", gallery.ID.String())
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, url.String(), http.StatusFound)
+}
+
+func (g *Gallery) UploadImageViaLink(w http.ResponseWriter, r *http.Request) {
+	// get gallery id variable
+	galleryID := mux.Vars(r)["galleryID"]
+
+	// fetch gallery by id
+	gallery, err := g.GalleryService.FindByID(galleryID)
+	if err != nil {
+		// redirect user to not found
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// get user from conext
+	user := context.UserValue(r.Context())
+
+	// check that the user own the gallery
+	if !uuid.Equal(user.ID, gallery.UserID) {
+		// redirect user to not found
+		http.Redirect(w, r, "/notFound", http.StatusPermanentRedirect)
+		return
+	}
+
+	// define view params data
+	params := views.Params{
+		Data: gallery,
+	}
+
+	if err := r.ParseForm(); err != nil {
+		params.SetAlert(err)
+		g.EditGalleryView.Render(w, r, params)
+		return
+	}
+
+	// get the links values
+	links := r.PostForm["links"]
+
+	// create waitgroup
+	wg := sync.WaitGroup{}
+	wg.Add(len(links))
+
+	for _, link := range links {
+		go func(imageUrl string) {
+			defer wg.Done()
+
+			res, err := http.Get(imageUrl)
+			if err != nil {
+				log.Println("can not download the image with imageUrl = ", imageUrl)
+				return
+			}
+			defer res.Body.Close()
+
+			// get the file name
+			fileName := filepath.Base(imageUrl)
+
+			// save the image
+			err = g.ImageService.CreateImage(res.Body, gallery.ID, fileName)
+			if err != nil {
+				log.Println("failed to create the image with the imageUrl = ", imageUrl)
+			}
+		}(link)
+	}
+
+	wg.Wait()
 
 	// redirect user to show gallery page
 	url, err := g.router.Get(EditGalleryPageEndpoint).URL("galleryID", gallery.ID.String())
